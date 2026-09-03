@@ -10,4 +10,34 @@ if(WIN32)
     add_compile_definitions(NOMINMAX)
 endif()
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+find_package(Boost REQUIRED COMPONENTS json)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+find_package(Threads REQUIRED)
+
+add_executable(game_server
+    src/main.cpp
+    src/http_server.cpp
+    src/http_server.h
+    src/sdk.h
+    src/model.h
+    src/model.cpp
+    src/tagged.h
+    src/json_loader.h
+    src/json_loader.cpp
+    src/request_handler.cpp
+    src/request_handler.h
+)
+
+target_link_libraries(game_server PRIVATE
+    Boost::json
+    Threads::Threads
+)
+
+target_compile_definitions(game_server PRIVATE
+    WIN32_LEAN_AND_MEAN
+    _WIN32_WINNT=0x0A00
+    WINVER=0x0A00
+)

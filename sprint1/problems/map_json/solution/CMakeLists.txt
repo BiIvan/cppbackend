@@ -6,14 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
-
-find_package(Boost 1.79.0 REQUIRED)
-if(Boost_FOUND)
-  include_directories(${Boost_INCLUDE_DIRS})
-endif()
-
 if(WIN32)
     add_compile_definitions(NOMINMAX)
 endif()
@@ -25,24 +17,27 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
 find_package(Boost REQUIRED)
-set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 add_executable(game_server
-	src/main.cpp
-	src/http_server.cpp
-	src/http_server.h
-	src/sdk.h
-	src/model.h
-	src/model.cpp
-	src/tagged.h
-	src/boost_json.cpp
-	src/json_loader.h
-	src/json_loader.cpp
-	src/request_handler.cpp
-	src/request_handler.h
+        src/main.cpp
+        src/http_server.cpp
+        src/http_server.h
+        src/sdk.h
+        src/model.h
+        src/model.cpp
+        src/tagged.h
+        src/boost_json.cpp
+        src/json_loader.h
+        src/json_loader.cpp
+        src/request_handler.cpp
+        src/request_handler.h
 )
-target_link_libraries(game_server PRIVATE Threads::Threads)
+
+target_link_libraries(game_server PRIVATE
+    Boost::boost
+    Threads::Threads
+)
 
 if(WIN32)
     target_compile_definitions(game_server PRIVATE
@@ -51,4 +46,3 @@ if(WIN32)
         WINVER=0x0A00
     )
 endif()
-

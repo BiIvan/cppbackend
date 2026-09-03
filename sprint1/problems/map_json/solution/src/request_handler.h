@@ -143,7 +143,7 @@ namespace http_handler {
           "badRequest",
           "Bad request"));
       }
-      const boost::beast::string_view target = req.target();
+      const std::string target{req.target()};
       if (target == "/api/v1/maps") {
         return send(MakeMapsResponse(req.version(), req.keep_alive()));
       }

@@ -65,7 +65,7 @@ namespace {
     }
     StringResponse response = text_response(
       http::status::method_not_allowed,
-      "Invalid method."sv);
+      "Invalid method"sv);
     response.set(http::field::allow, "GET, HEAD");
     return response;
   }

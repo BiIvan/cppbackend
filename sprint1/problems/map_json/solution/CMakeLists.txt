@@ -1,0 +1,39 @@
+cmake_minimum_required(VERSION 3.20)
+
+project(GameServer CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(WIN32)
+    add_compile_definitions(NOMINMAX)
+endif()
+
+find_package(Boost REQUIRED COMPONENTS json)
+find_package(Threads REQUIRED)
+
+add_executable(game_server
+    src/main.cpp
+    src/http_server.cpp
+    src/http_server.h
+    src/sdk.h
+    src/model.h
+    src/model.cpp
+    src/tagged.h
+    src/json_loader.h
+    src/json_loader.cpp
+    src/request_handler.cpp
+    src/request_handler.h
+)
+
+target_link_libraries(game_server PRIVATE
+    Boost::json
+    Threads::Threads
+)
+
+target_compile_definitions(game_server PRIVATE
+    WIN32_LEAN_AND_MEAN
+    _WIN32_WINNT=0x0A00
+    WINVER=0x0A00
+)

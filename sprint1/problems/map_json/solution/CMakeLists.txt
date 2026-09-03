@@ -16,7 +16,7 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
-find_package(Boost REQUIRED COMPONENTS json)
+find_package(Boost REQUIRED)
 find_package(Threads REQUIRED)
 
 add_executable(game_server
@@ -34,7 +34,7 @@ add_executable(game_server
 )
 
 target_link_libraries(game_server PRIVATE
-    Boost::json
+    Boost::boost
     Threads::Threads
 )
 

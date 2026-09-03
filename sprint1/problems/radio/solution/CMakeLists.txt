@@ -8,23 +8,4 @@ if(WIN32)
     add_compile_definitions(NOMINMAX)
 endif()
 
-find_package(Boost REQUIRED)
-find_package(miniaudio REQUIRED)
-find_package(Threads REQUIRED)
-
-add_executable(radio
-    src/main.cpp
-    src/miniaudio_impl.cpp
-)
-
-target_link_libraries(radio PRIVATE
-    Boost::boost
-    miniaudio::miniaudio
-    Threads::Threads
-)
-
-target_compile_definitions(radio PRIVATE
-    WIN32_LEAN_AND_MEAN
-    _WIN32_WINNT=0x0A00
-    WINVER=0x0A00
-)
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})

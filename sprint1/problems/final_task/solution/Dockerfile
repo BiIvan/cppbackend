@@ -16,7 +16,7 @@ RUN wget -O cmake.tar.gz https://github.com/Kitware/CMake/releases/download/v3.2
     rm cmake.tar.gz
 
 # Conan
-RUN pip3 install "conan==1.*"
+RUN pip3 install --no-cache-dir --break-system-packages "conan==1.*"
 
 WORKDIR /app
 COPY conanfile.txt .

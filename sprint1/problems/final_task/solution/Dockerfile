@@ -46,4 +46,6 @@ RUN chown -R www:www /app
 USER www
 WORKDIR /app
 
-ENTRYPOINT ["/app/game_server", "/app/data/config.json"]
+EXPOSE 8080
+
+CMD ["/app/game_server", "/app/data/config.json"]

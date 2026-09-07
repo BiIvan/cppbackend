@@ -1,7 +1,7 @@
 # Этап сборки
-FROM gcc:11.3 AS build
+FROM gcc:11 AS build
 
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y \
     python3-pip \
     git \
     wget \

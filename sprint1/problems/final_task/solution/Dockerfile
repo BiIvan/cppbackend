@@ -33,7 +33,7 @@ RUN mkdir -p build && cd build && \
     find . -type f -name game_server -ls
 
 # Этап запуска
-FROM ubuntu:22.04 AS run
+FROM gcc:13 AS run
 
 RUN groupadd -r www && \
     useradd -r -g www -d /app -s /usr/sbin/nologin www

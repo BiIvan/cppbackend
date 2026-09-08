@@ -67,7 +67,7 @@ int main(int argc, const char* argv[]) {
     const auto address = net::ip::make_address("0.0.0.0");
     constexpr unsigned short port = 8080;
     http_server::ServeHttp(ioc, tcp::endpoint{ address, port }, handler);
-    std::cout << "Server has started on port " << port << '\n';
+    std::cout << "Server has started on port " << port << std::endl;
     RunWorkers(num_threads, [&ioc] { ioc.run(); });
     g_ioc = nullptr;
   }

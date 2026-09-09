@@ -11,7 +11,6 @@
 #include <string_view>
 
 using namespace std::literals;
-
 #define LOG(...) Logger::GetInstance().Log(__VA_ARGS__)
 
 class Logger {
@@ -20,38 +19,6 @@ class Logger {
   std::ofstream log_file_;
   std::string opened_file_date_;
 
-public:
-  static Logger& GetInstance() {
-    static Logger obj;
-    return obj;
-  }
-
-  Logger(const Logger&) = delete;
-  Logger& operator=(const Logger&) = delete;
-
-  template <class... Ts>
-  void Log(const Ts&... args) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    const auto now = GetTimeUnlocked();
-    const std::string file_date = GetFileTimeStampUnlocked(now);
-    OpenFileForDateUnlocked(file_date);
-    std::ostringstream line;
-    line << GetTimeStampUnlocked(now) << ": ";
-    (line << ... << args);
-    line << '\n';
-    log_file_ << line.str();
-    log_file_.flush();
-    if (!log_file_) {
-      throw std::runtime_error("Failed to write to log file");
-    }
-  }
-
-  void SetTimestamp(std::chrono::system_clock::time_point ts) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    manual_ts_ = ts;
-  }
-
-private:
   Logger() = default;
 
   std::chrono::system_clock::time_point GetTimeUnlocked() const {
@@ -111,5 +78,36 @@ private:
       );
     }
     opened_file_date_ = date;
+  }
+  
+public:
+  static Logger& GetInstance() {
+    static Logger obj;
+    return obj;
+  }
+
+  Logger(const Logger&) = delete;
+  Logger& operator=(const Logger&) = delete;
+
+  template <class... Ts>
+  void Log(const Ts&... args) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    const auto now = GetTimeUnlocked();
+    const std::string file_date = GetFileTimeStampUnlocked(now);
+    OpenFileForDateUnlocked(file_date);
+    std::ostringstream line;
+    line << GetTimeStampUnlocked(now) << ": ";
+    (line << ... << args);
+    line << '\n';
+    log_file_ << line.str();
+    log_file_.flush();
+    if (!log_file_) {
+      throw std::runtime_error("Failed to write to log file");
+    }
+  }
+
+  void SetTimestamp(std::chrono::system_clock::time_point ts) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    manual_ts_ = ts;
   }
 };

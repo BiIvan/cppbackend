@@ -1,7 +1,7 @@
-#include "my_logger.h"
-
-#include <string_view>
 #include <thread>
+#include <string_view>
+
+#include "my_logger.h"
 
 using namespace std::literals;
 

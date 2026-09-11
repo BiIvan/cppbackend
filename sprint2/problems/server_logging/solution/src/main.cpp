@@ -50,6 +50,7 @@ int main(int argc, const char* argv[]) {
   logger::InitLogger();
   try {
       const fs::path config_path = argv[1];
+      const fs::path static_root = config_path.parent_path();
       model::Game game =
           json_loader::LoadGame(config_path.string());
       const unsigned num_threads =
@@ -58,7 +59,9 @@ int main(int argc, const char* argv[]) {
       g_ioc = &ioc;
       std::signal(SIGINT, HandleSignal);
       std::signal(SIGTERM, HandleSignal);
-      http_handler::RequestHandler handler{game};
+      http_handler::RequestHandler handler{
+          game,
+          static_root};
       const auto address =
           net::ip::make_address("0.0.0.0");
       constexpr unsigned short port = 8080;
@@ -67,15 +70,15 @@ int main(int argc, const char* argv[]) {
           tcp::endpoint{address, port},
           handler);
       BOOST_LOG_TRIVIAL(info)
-        << logging::add_value(
-             additional_data,
-             json::object{
-               {"port", port},
-               {"address", address.to_string()},
-             })
+          << logging::add_value(
+                 additional_data,
+                 json::object{
+                     {"port", port},
+                     {"address", address.to_string()},
+                 })
           << "server started";
       logging::core::get()->flush();
-      std::cout.flush();          
+      std::cout.flush();
       RunWorkers(num_threads, [&ioc] {
           ioc.run();
       });

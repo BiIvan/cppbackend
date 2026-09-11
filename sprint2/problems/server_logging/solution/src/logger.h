@@ -5,9 +5,11 @@
 #include <iostream>
 #include <boost/json.hpp>
 #include <boost/optional.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/expressions.hpp>
+#include <boost/core/null_deleter.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/sources/record_ostream.hpp>
@@ -21,7 +23,8 @@ namespace sinks = boost::log::sinks;
 namespace expr = boost::log::expressions;
 namespace json = boost::json;
 
-BOOST_LOG_ATTRIBUTE_KEYWORD(additional_data, "AdditionalData", json::value)
+BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp, "TimeStamp", boost::posix_time::ptime)
+BOOST_LOG_ATTRIBUTE_KEYWORD(additional_data, "AdditionalData", boost::json::value)
 
 namespace logger {
 
@@ -35,11 +38,10 @@ namespace logger {
       const logging::record_view& record,
       logging::formatting_ostream& stream) {
       json::object result;
-      const auto timestamp =
-        record[expr::attr<boost::posix_time::ptime>("TimeStamp")];
-      if (timestamp) {
-        result["timestamp"] =
-          boost::posix_time::to_iso_extended_string(timestamp.get());
+      const auto timestamp_value = record[timestamp];
+      if (timestamp_value) {
+          result["timestamp"] =
+              boost::posix_time::to_iso_extended_string(timestamp_value.get());
       }
       const auto message = record[expr::smessage];
       result["message"] = message ? message.get() : "";

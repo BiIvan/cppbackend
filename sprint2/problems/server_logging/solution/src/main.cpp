@@ -67,13 +67,15 @@ int main(int argc, const char* argv[]) {
           tcp::endpoint{address, port},
           handler);
       BOOST_LOG_TRIVIAL(info)
-          << logging::add_value(
-                 additional_data,
-                 json::object{
-                     {"port", port},
-                     {"address", address.to_string()},
-                 })
-          << "server started";          
+        << logging::add_value(
+             additional_data,
+             json::object{
+               {"port", port},
+               {"address", address.to_string()},
+             })
+          << "server started";
+      logging::core::get()->flush();
+      std::cout.flush();          
       RunWorkers(num_threads, [&ioc] {
           ioc.run();
       });

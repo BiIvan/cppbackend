@@ -124,7 +124,7 @@ namespace http_handler {
     }
 
     model::Game& game_;
-    
+
   public:
     explicit RequestHandler(model::Game& game)
       : game_{game} {
@@ -145,12 +145,16 @@ namespace http_handler {
       }
       const std::string target{req.target()};
       if (target == "/api/v1/maps") {
-        return send(MakeMapsResponse(req.version(), req.keep_alive()));
+        return send(MakeMapsResponse(
+          req.version(),
+          req.keep_alive()));
       }
       constexpr std::string_view maps_prefix = "/api/v1/maps/";
       if (target.starts_with(maps_prefix)) {
-        const std::string_view map_id = target.substr(maps_prefix.size());
-        if (map_id.empty() || map_id.find('/') != std::string_view::npos) {
+        const std::string_view map_id =
+          target.substr(maps_prefix.size());
+        if (map_id.empty() ||
+          map_id.find('/') != std::string_view::npos) {
           return send(MakeErrorResponse(
             http::status::bad_request,
             req.version(),
@@ -158,8 +162,9 @@ namespace http_handler {
             "badRequest",
             "Bad request"));
         }
-        const model::Map* map{game_.FindMap(model::Map::Id{std::string(map_id)})};
-        if (!map) {
+        const model::Map* map =
+          game_.FindMap(model::Map::Id{std::string(map_id)});
+        if (map == nullptr) {
           return send(MakeErrorResponse(
             http::status::not_found,
             req.version(),
@@ -167,7 +172,10 @@ namespace http_handler {
             "mapNotFound",
             "Map not found"));
         }
-        return send(MakeMapResponse(*map,req.version(),req.keep_alive()));
+        return send(MakeMapResponse(
+          *map,
+          req.version(),
+          req.keep_alive()));
       }
       return send(MakeErrorResponse(
         http::status::bad_request,

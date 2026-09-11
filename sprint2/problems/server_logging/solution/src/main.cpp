@@ -50,9 +50,8 @@ int main(int argc, const char* argv[]) {
   logger::InitLogger();
   try {
       const fs::path config_path = argv[1];
-      const fs::path static_root = config_path.parent_path();
-      model::Game game =
-          json_loader::LoadGame(config_path.string());
+      const fs::path static_root = config_path.parent_path().parent_path() / "static";
+      model::Game game = json_loader::LoadGame(config_path.string());
       const unsigned num_threads =
           std::max(1u, std::thread::hardware_concurrency());
       net::io_context ioc{static_cast<int>(num_threads)};

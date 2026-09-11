@@ -73,7 +73,7 @@ int main(int argc, const char* argv[]) {
                      {"port", port},
                      {"address", address.to_string()},
                  })
-          << "server has started";
+          << "server started";          
       RunWorkers(num_threads, [&ioc] {
           ioc.run();
       });

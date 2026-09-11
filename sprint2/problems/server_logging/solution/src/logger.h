@@ -33,26 +33,28 @@ namespace logger {
     auto sink = boost::make_shared<sinks::synchronous_sink<
       sinks::text_ostream_backend>>();
     sink->locked_backend()->add_stream(
-      boost::shared_ptr<std::ostream>(&std::cout, boost::null_deleter{}));
+      boost::shared_ptr<std::ostream>(&std::cout, boost::null_deleter{}));     
     sink->set_formatter([](
-      const logging::record_view& record,
-      logging::formatting_ostream& stream) {
-      json::object result;
-      const auto timestamp_value = record[timestamp];
-      if (timestamp_value) {
-          result["timestamp"] =
-              boost::posix_time::to_iso_extended_string(timestamp_value.get());
-      }
-      const auto message = record[expr::smessage];
-      result["message"] = message ? message.get() : "";
-      const auto data = record[additional_data];
-      if (data && data.get().is_object()) {
-          result["data"] = data.get();
-      } else {
-          result["data"] = json::object{};
-      }
-      stream << json::serialize(result);
-    });
+        const logging::record_view& record,
+        logging::formatting_ostream& stream) {
+        json::object log_record;
+        const auto timestamp_value = record[timestamp];
+        log_record["timestamp"] =
+            boost::posix_time::to_iso_extended_string(timestamp_value.get());
+        const auto message_value =
+            record[boost::log::expressions::smessage];
+        log_record["message"] =
+            message_value
+                ? std::string(message_value.get())
+                : std::string{};
+        const auto data_value = record[additional_data];
+        if (data_value && data_value.get().is_object()) {
+            log_record["data"] = data_value.get();
+        } else {
+            log_record["data"] = json::object{};
+        }
+        stream << json::serialize(log_record) << std::endl;
+    });    
     logging::core::get()->add_sink(sink);
   }
 

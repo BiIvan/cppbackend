@@ -75,7 +75,7 @@ int main(int argc, const char* argv[]) {
              })
           << "server started";
       logging::core::get()->flush();
-//      std::cout.flush();          
+      std::cout.flush();          
       RunWorkers(num_threads, [&ioc] {
           ioc.run();
       });

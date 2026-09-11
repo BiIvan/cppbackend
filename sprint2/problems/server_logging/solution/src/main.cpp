@@ -72,9 +72,8 @@ int main(int argc, const char* argv[]) {
                  json::object{
                      {"port", port},
                      {"address", address.to_string()},
-                     {"status", "server has started"},
                  })
-          << "server started";
+          << "server has started";
       RunWorkers(num_threads, [&ioc] {
           ioc.run();
       });

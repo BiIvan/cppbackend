@@ -16,10 +16,10 @@ endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Conan CMakeDeps создаёт boost-config.cmake в build/.
-list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+# Файл создаётся Conan generator "cmake".
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(TARGETS)
 
-find_package(boost REQUIRED CONFIG)
 find_package(Threads REQUIRED)
 
 add_executable(game_server
@@ -38,8 +38,7 @@ add_executable(game_server
 )
 
 target_link_libraries(game_server PRIVATE
-    boost::log
-    boost::log_setup
+    CONAN_PKG::boost
     Threads::Threads
 )
 

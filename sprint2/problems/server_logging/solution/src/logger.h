@@ -42,6 +42,7 @@ namespace logger {
         boost::shared_ptr<std::ostream>(
           &std::cout,
           boost::null_deleter{}));
+      sink->locked_backend()->auto_flush(true);
       sink->set_formatter([](
         const logging::record_view& record,
         logging::formatting_ostream& stream) {

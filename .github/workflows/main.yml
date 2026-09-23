@@ -99,6 +99,11 @@ jobs:
         with:
           submodules: true
 
+      - name: Fix Conan compiler version
+        run: |
+          GCC_VERSION=$(g++ -dumpversion | cut -d. -f1)
+          conan profile update settings.compiler.version=$GCC_VERSION default
+    
       - name: Install dependencies
         run: |
           pip uninstall conan -y

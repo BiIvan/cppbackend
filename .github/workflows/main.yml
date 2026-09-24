@@ -41,36 +41,12 @@ jobs:
         with:
           submodules: true
 
-      - name: Install dependencies and configure GCC 11
+      - name: Install dependencies
         run: |
-          set -euxo pipefail
-      
-          apt-get update
-          apt-get install -y --no-install-recommends gcc-11 g++-11
-      
-          pip uninstall -y conan || true
+          pip uninstall conan -y
           pip install -U conan==1.59.0
-      
-          rm -rf /github/home/.conan
           cp -R /home/forconan/.conan /github/home/.conan
-      
-          test -x /usr/bin/gcc-11
-          test -x /usr/bin/g++-11
-      
-          conan profile new default --detect --force
-          conan profile update settings.compiler=gcc default
-          conan profile update settings.compiler.version=11 default
-          conan profile update settings.compiler.libcxx=libstdc++11 default
-          conan profile update env.CC=/usr/bin/gcc-11 default
-          conan profile update env.CXX=/usr/bin/g++-11 default
-      
-          echo "=== GCC 11 ==="
-          /usr/bin/gcc-11 --version
-          /usr/bin/g++-11 --version
-      
-          echo "=== Conan profile ==="
-          conan profile show default    
-          
+
       - name: run tests sprint1 sum
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint1

@@ -103,17 +103,33 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip uninstall conan -y
+          set -euxo pipefail
+      
+          pip uninstall -y conan || true
           pip install -U conan==1.59.0
+      
           cp -R /home/forconan/.conan /github/home/.conan
+      
+          test -x /usr/bin/gcc-11
+          test -x /usr/bin/g++-11
+      
+          echo "CC=/usr/bin/gcc-11" >> "$GITHUB_ENV"
+          echo "CXX=/usr/bin/g++-11" >> "$GITHUB_ENV"
+      
           conan profile new default --detect --force
+          conan profile update settings.compiler=gcc default
+          conan profile update settings.compiler.version=11 default
           conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan profile update env.CC=/usr/bin/gcc-11 default
+          conan profile update env.CXX=/usr/bin/g++-11 default
+      
           echo "=== Conan profile ==="
           conan profile show default
-          echo "=== Compiler ==="
-          g++ --version
-          cmake --version
-          
+      
+          echo "=== GCC 11 ==="
+          /usr/bin/gcc-11 --version
+          /usr/bin/g++-11 --version
+    
       - name: run tests sprint2 static_content
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint2

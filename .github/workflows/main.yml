@@ -16,6 +16,15 @@ jobs:
   sprint_1:
     if: github.repository_owner != 'cpppracticum'
     runs-on: ubuntu-22.04
+  
+    defaults:
+      run:
+        shell: bash
+  
+    env:
+      CC: /usr/bin/gcc-11
+      CXX: /usr/bin/g++-11
+  
     container:
       image: praktikumcpp/practicum_cpp_backend:latest
       env:
@@ -23,65 +32,117 @@ jobs:
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock
       options: --name main-container
+  
     steps:
       - name: get docker network
-        run: echo "DOCKER_NETWORK=$(docker inspect main-container -f '{{range $k, $v := .NetworkSettings.Networks}}{{printf "%s" $k}}{{end}}')" >> $GITHUB_ENV
-
+        run: |
+          echo "DOCKER_NETWORK=$(docker inspect main-container -f \
+            '{{range $k, $v := .NetworkSettings.Networks}}{{printf "%s" $k}}{{end}}')" \
+            >> "$GITHUB_ENV"
+  
       - name: Checkout code & tests
         uses: actions/checkout@v3
         with:
           submodules: true
-
-      - name: Install dependencies
+  
+      - name: Install dependencies and configure GCC 11
         run: |
-          pip uninstall conan -y
+          set -euxo pipefail
+  
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            gcc-11 \
+            g++-11 \
+            python3.10-venv
+  
+          pip uninstall -y conan || true
           pip install -U conan==1.59.0
+  
+          rm -rf /github/home/.conan
           cp -R /home/forconan/.conan /github/home/.conan
-
+  
+          test -x "$CC"
+          test -x "$CXX"
+  
+          conan profile new default --detect --force
+          conan profile update settings.compiler=gcc default
+          conan profile update settings.compiler.version=11 default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan profile update env.CC="$CC" default
+          conan profile update env.CXX="$CXX" default
+  
+          echo "=== Active compilers ==="
+          "$CC" --version
+          "$CXX" --version
+  
+          echo "=== Conan profile ==="
+          conan profile show default
+  
+      - name: Prepare Python virtual environment
+        run: |
+          set -euxo pipefail
+  
+          python3 -m venv .venv
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
+  
+          if [[ -f requirements.txt ]]; then
+            pip install -r requirements.txt
+          fi
+  
       - name: run tests sprint1 sum
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint1
           ./sum/run.sh
-
+  
       - name: run tests sprint1 sync_server
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint1
           ./sync_server/run.sh
-
+  
       - name: run tests sprint1 restaurant_single_threaded
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint1
           ./restaurant_single_threaded/run.sh
-
+  
       - name: run tests sprint1 cafeteria
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint1
           ./cafeteria/run.sh
-
+  
       - name: run tests sprint1 async_server
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint1
           ./async_server/run.sh
-
+  
       - name: run tests sprint1 map_json
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint1
           ./map_json/run.sh
-
+  
       - name: run tests sprint1 final_task
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint1
           ./final_task/run.sh
-
+  
       - name: Publish XML reports
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           junit_files: ${{ github.workspace }}/*.xml
-
+        
   sprint_2:
     if: github.repository_owner != 'cpppracticum'
     runs-on: ubuntu-22.04
+    
+    defaults:
+      run:
+        shell: bash
+  
+    env:
+      CC: /usr/bin/gcc-11
+      CXX: /usr/bin/g++-11
+  
     container:
       image: praktikumcpp/practicum_cpp_backend:latest
       env:
@@ -99,17 +160,39 @@ jobs:
         with:
           submodules: true
 
-      - name: Fix Conan compiler version
+      - name: Install dependencies and configure GCC 11
         run: |
-          GCC_VERSION=$(g++ -dumpversion | cut -d. -f1)
-          conan profile update settings.compiler.version=$GCC_VERSION default
-    
-      - name: Install dependencies
-        run: |
-          pip uninstall conan -y
+          set -euxo pipefail
+      
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            gcc-11 \
+            g++-11 \
+            python3.10-venv
+  
+          pip uninstall -y conan || true
           pip install -U conan==1.59.0
+      
+          rm -rf /github/home/.conan
           cp -R /home/forconan/.conan /github/home/.conan
-
+      
+          test -x /usr/bin/gcc-11
+          test -x /usr/bin/g++-11
+      
+          conan profile new default --detect --force
+          conan profile update settings.compiler=gcc default
+          conan profile update settings.compiler.version=11 default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan profile update env.CC=/usr/bin/gcc-11 default
+          conan profile update env.CXX=/usr/bin/g++-11 default
+      
+          echo "=== GCC 11 ==="
+          /usr/bin/gcc-11 --version
+          /usr/bin/g++-11 --version
+      
+          echo "=== Conan profile ==="
+          conan profile show default    
+          
       - name: run tests sprint2 static_content
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint2

@@ -82,6 +82,8 @@ jobs:
   sprint_2:
     if: github.repository_owner != 'cpppracticum'
     runs-on: ubuntu-22.04
+    env:
+      CONAN_DISABLE_CHECK_COMPILER: "1"
     container:
       image: praktikumcpp/practicum_cpp_backend:latest
       env:
@@ -105,6 +107,8 @@ jobs:
           pip install -U conan==1.59.0
           cp -R /home/forconan/.conan /github/home/.conan
           conan profile new default --detect --force
+          conan profile update settings.compiler.version=11 default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
           
       - name: run tests sprint2 static_content
         run: |

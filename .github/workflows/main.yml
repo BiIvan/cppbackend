@@ -16,6 +16,15 @@ jobs:
   sprint_1:
     if: github.repository_owner != 'cpppracticum'
     runs-on: ubuntu-22.04
+    
+    defaults:
+      run:
+        shell: bash
+  
+    env:
+      CC: /usr/bin/gcc-11
+      CXX: /usr/bin/g++-11
+  
     container:
       image: praktikumcpp/practicum_cpp_backend:latest
       env:

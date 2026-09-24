@@ -1,23 +1,25 @@
 #pragma once
 
-#include <algorithm>
-#include <cassert>
 #include <cctype>
-#include <filesystem>
-#include <optional>
 #include <string>
-#include <string_view>
+#include <cassert>
 #include <utility>
 #include <variant>
+#include <iostream>
+#include <optional>
+#include <algorithm>
+#include <filesystem>
+#include <string_view>
+#include <boost/asio/post.hpp>
 
-#include <boost/asio/dispatch.hpp>
-#include <boost/asio/strand.hpp>
+#include <boost/json.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
-#include <boost/json.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/asio/dispatch.hpp>
 
-#include "application.h"
 #include "model.h"
+#include "application.h"
 
 namespace http_handler {
 
@@ -54,24 +56,27 @@ public:
         const bool keep_alive = req.keep_alive();
         try {
             if (IsApiRequest(req)) {
-                auto handle = [
-                    self = shared_from_this(),
-                    req = std::move(req),
-                    send,
-                    version,
-                    keep_alive
-                ]() mutable {
-                    try {
-                        assert(self->api_strand_.running_in_this_thread());
-                        http::request<http::string_body> string_request{
-                            std::move(req)};
-                        send(self->HandleApiRequest(string_request));
-                    } catch (...) {
-                        send(self->ReportServerError(version, keep_alive));
-                    }
-                };
-                net::dispatch(api_strand_, std::move(handle));
-                return;
+              auto handle = [
+                  self = shared_from_this(),
+                  req = std::move(req),
+                  send,
+                  version,
+                  keep_alive
+              ]() mutable {
+                  try {
+                      http::request<http::string_body> string_request{
+                          std::move(req)};
+                      send(self->HandleApiRequest(string_request));
+                  } catch (const std::exception& ex) {
+                      std::cerr << "API request failed: " << ex.what() << '\n';
+                      send(self->ReportServerError(version, keep_alive));
+                  } catch (...) {
+                      std::cerr << "API request failed: unknown exception\n";
+                      send(self->ReportServerError(version, keep_alive));
+                  }
+              };
+              net::post(api_strand_, std::move(handle));
+              return;
             }
             http::request<http::string_body> string_request{
                 std::move(req)};

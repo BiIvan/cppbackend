@@ -35,6 +35,16 @@ namespace http_handler {
       return response;
     }
     
+    static StringResponse MakePlainTextResponse(
+        http::status status, unsigned version, bool keep_alive, std::string body) {
+        return MakeStringResponse(
+            status,
+            version,
+            keep_alive,
+            std::move(body),
+            "text/plain");
+    }
+
     static StringResponse MakeJsonResponse(
       http::status status,
       unsigned version,
@@ -157,12 +167,11 @@ namespace http_handler {
       std::error_code fs_ec;
       if (!IsPathInsideRoot(static_root_, file_path)
         || !std::filesystem::is_regular_file(file_path, fs_ec)) {
-        return send(MakeErrorResponse(
-          http::status::not_found,
-          req.version(),
-          req.keep_alive(),
-          "notFound",
-          "File not found"));
+        return send(MakePlainTextResponse(
+            http::status::not_found,
+            req.version(),
+            req.keep_alive(),
+            "File not found"));
       }
       return send(MakeFileResponse(
         file_path,
@@ -296,6 +305,23 @@ namespace http_handler {
           req.keep_alive()));
       }
       constexpr beast::string_view maps_prefix = "/api/v1/maps/";
+      constexpr beast::string_view api_prefix = "/api/";
+
+      if (target.starts_with(api_prefix)) {
+          constexpr beast::string_view maps_prefix = "/api/v1/maps/";
+
+          const bool is_maps_list = target == "/api/v1/maps";
+          const bool is_map_item = target.starts_with(maps_prefix);
+
+          if (!is_maps_list && !is_map_item) {
+              return send(MakeErrorResponse(
+                  http::status::bad_request,
+                  req.version(),
+                  req.keep_alive(),
+                  "badRequest",
+                  "Bad request"));
+          }
+      }
       if (target.starts_with(maps_prefix)) {
         const beast::string_view map_id =
           target.substr(maps_prefix.size());

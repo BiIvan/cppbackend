@@ -107,8 +107,12 @@ jobs:
           pip install -U conan==1.59.0
           cp -R /home/forconan/.conan /github/home/.conan
           conan profile new default --detect --force
-          conan profile update settings.compiler.version=11 default
           conan profile update settings.compiler.libcxx=libstdc++11 default
+          echo "=== Conan profile ==="
+          conan profile show default
+          echo "=== Compiler ==="
+          g++ --version
+          cmake --version
           
       - name: run tests sprint2 static_content
         run: |

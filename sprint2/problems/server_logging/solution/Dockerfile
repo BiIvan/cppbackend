@@ -40,6 +40,7 @@ RUN groupadd -r www && \
 
 COPY --from=build /app/build/bin/game_server /app/game_server
 COPY ./data /app/data
+COPY ./static /app/static
 
 RUN chown -R www:www /app
 

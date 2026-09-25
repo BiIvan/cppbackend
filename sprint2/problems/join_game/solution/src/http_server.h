@@ -1,7 +1,7 @@
 #pragma once
 
-#include <memory>
 #include <chrono>
+#include <memory>
 #include <utility>
 #include <iostream>
 #include <optional>
@@ -26,53 +26,56 @@ namespace http_server {
   template <typename RequestHandler>
   class HttpSession
     : public std::enable_shared_from_this<HttpSession<RequestHandler>> {
+
     class SendLambda {
-      HttpSession& session_;
+      std::shared_ptr<HttpSession> session_;
 
     public:
-      explicit SendLambda(HttpSession& session) noexcept
-        : session_(session) {
+      explicit SendLambda(std::shared_ptr<HttpSession> session) noexcept
+          : session_(std::move(session)) {
       }
 
       template <typename Response>
       void operator()(Response&& response) const {
-          using ResponseType = std::decay_t<Response>;
-          auto response_ptr = std::make_shared<ResponseType>(
-              std::forward<Response>(response));
-          const auto now = std::chrono::steady_clock::now();
-          const auto elapsed = session_.request_time_
-              ? std::chrono::duration_cast<std::chrono::milliseconds>(
-                    now - *session_.request_time_)
-                    .count()
-              : 0;
-          json::value content_type = nullptr;
-          const auto content_type_it =
-              response_ptr->find(http::field::content_type);
-          if (content_type_it != response_ptr->end()) {
-              const auto value = content_type_it->value();
-
-              content_type = std::string{
-                  value.data(),
-                  value.size()
-              };
-          }
-          BOOST_LOG_TRIVIAL(info)
-              << logging::add_value(
-                  additional_data,
-                  json::object{
-                      {"response_time", elapsed},
-                      {"code", response_ptr->result_int()},
-                      {"content_type", std::move(content_type)},
-                  })
-              << "response sent";
-          session_.response_ = response_ptr;
-          http::async_write(
-              session_.stream_,
-              *response_ptr,
-              beast::bind_front_handler(
-                  &HttpSession::OnWrite,
-                  session_.shared_from_this(),
-                  response_ptr->need_eof()));
+        using ResponseType = std::decay_t<Response>;
+        auto response_ptr = std::make_shared<ResponseType>(
+          std::forward<Response>(response));
+        const auto now = std::chrono::steady_clock::now();
+        const auto elapsed = session_->request_time_
+          ? std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - *session_->request_time_)
+            .count()
+          : 0;
+        json::value content_type = nullptr;
+        const auto content_type_it =
+          response_ptr->find(http::field::content_type);
+        if (content_type_it != response_ptr->end()) {
+          const auto content_type_value =
+            content_type_it->value();
+          content_type = std::string{
+            content_type_value.data(),
+            content_type_value.size()
+          };
+        }
+        BOOST_LOG_TRIVIAL(info)
+          << logging::add_value(
+            additional_data,
+            json::object{
+              {"response_time", elapsed},
+              {"code", response_ptr->result_int()},
+              {"content_type", std::move(content_type)},
+            })
+          << "response sent";
+        session_->response_ = response_ptr;
+        http::async_write(
+          session_->stream_,
+          *response_ptr,
+          beast::bind_front_handler(
+            &HttpSession::OnWrite,
+            session_,
+            response_ptr->need_eof()
+          )
+        );
       }
     };
 
@@ -97,29 +100,37 @@ namespace http_server {
         return;
       }
       request_time_ = std::chrono::steady_clock::now();
-      const auto remote_endpoint = stream_.socket().remote_endpoint(ec);
-      if (ec) {
-        logger::LogError(ec, "remote_endpoint");
-        return;
-      }
-      const auto target = request_.target();
-      const auto method = request_.method_string();
       BOOST_LOG_TRIVIAL(info)
         << logging::add_value(
           additional_data,
           json::object{
-            {"ip", remote_endpoint.address().to_string()},
+            {
+              "ip",
+              stream_.socket()
+                .remote_endpoint()
+                .address()
+                .to_string()
+            },
             {
               "URI",
-              std::string{target.data(), target.size()}
+              std::string{
+                request_.target().data(),
+                request_.target().size()
+              }
             },
             {
               "method",
-              std::string{method.data(), method.size()}
+              std::string{
+                request_.method_string().data(),
+                request_.method_string().size()
+              }
             },
           })
-          << "request received";
-      request_handler_(std::move(request_), SendLambda{*this});
+        << "request received";
+      request_handler_(
+        std::move(request_),
+        SendLambda{this->shared_from_this()}
+      );
     }
 
     void OnWrite(bool close, beast::error_code ec, std::size_t) {
@@ -233,3 +244,4 @@ namespace http_server {
   }
 
 }  // namespace http_server
+

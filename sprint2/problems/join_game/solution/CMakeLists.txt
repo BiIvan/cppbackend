@@ -14,12 +14,12 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-# Файл создаётся Conan generator "cmake".
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
+# Файлы CMakeDeps от Conan 1 находятся в каталоге build.
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
 
+find_package(Boost CONFIG REQUIRED)
 find_package(Threads REQUIRED)
 
 add_executable(game_server
@@ -38,7 +38,8 @@ add_executable(game_server
 )
 
 target_link_libraries(game_server PRIVATE
-    CONAN_PKG::boost
+    Boost::log_setup
+    Boost::log
     Threads::Threads
 )
 
@@ -49,3 +50,4 @@ if(WIN32)
         WINVER=0x0A00
     )
 endif()
+

@@ -31,6 +31,7 @@ namespace json = boost::json;
 namespace fs = std::filesystem;
 
 using tcp = net::ip::tcp;
+using Strand = net::strand<net::io_context::executor_type>;
 
 class RequestHandler {
     using StringRequest = http::request<http::string_body>;
@@ -384,7 +385,6 @@ class RequestHandler {
     }
     
 public:
-    using Strand = net::strand<net::io_context::executor_type>;
 
     explicit RequestHandler(
         model::Game& game,

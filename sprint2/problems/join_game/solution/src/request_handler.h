@@ -406,30 +406,26 @@ public:
         const unsigned version = req.version();
         const bool keep_alive = req.keep_alive();
         try {
-            if (IsApiRequest(req)) {
-                auto handle = [
-                    this,
-                    req = std::move(req),
-                    send,
-                    version,
-                    keep_alive
-                ]() mutable {
-                    try {
-                        http::request<http::string_body> string_request{
-                            std::move(req)
-                        };
-                        send(HandleApiRequest(string_request));
-                    } catch (const std::exception& ex) {
-                        std::cerr << "API request failed: " << ex.what() << '\n';
-                        send(ReportServerError(version, keep_alive));
-                    } catch (...) {
-                        std::cerr << "API request failed: unknown exception\n";
-                        send(ReportServerError(version, keep_alive));
-                    }
-                };
-                net::post(api_strand_, std::move(handle));
-                return;
-            }            
+        if (IsApiRequest(req)) {
+          auto handle = [
+            this,
+            req = std::move(req),
+            send,
+            version,
+            keep_alive
+          ]() mutable {
+            try {
+              http::request<http::string_body> string_request{
+                  std::move(req)
+              };
+              send(HandleApiRequest(string_request));
+            } catch (...) {
+              send(ReportServerError(version, keep_alive));
+            }
+          };
+          net::post(api_strand_, std::move(handle));
+          return;
+        }
             http::request<http::string_body> string_request{
                 std::move(req)};
             std::visit(

@@ -102,17 +102,35 @@ namespace http_server {
       request_time_ = std::chrono::steady_clock::now();
       BOOST_LOG_TRIVIAL(info)
         << logging::add_value(
-            additional_data,
-            json::object{
-             {"ip", stream_.socket()
+          additional_data,
+          json::object{
+            {
+              "ip",
+              stream_.socket()
                 .remote_endpoint()
                 .address()
-                .to_string()},
-             {"URI", std::string(request_.target())},
-             {"method", std::string(request_.method_string())},
-            })
+                .to_string()
+            },
+            {
+              "URI",
+              std::string{
+                request_.target().data(),
+                request_.target().size()
+              }
+            },
+            {
+              "method",
+              std::string{
+                request_.method_string().data(),
+                request_.method_string().size()
+              }
+            },
+          })
         << "request received";
-      request_handler_(std::move(request_), SendLambda{*this});
+      request_handler_(
+        std::move(request_),
+        SendLambda{this->shared_from_this()}
+      );
     }
 
     void OnWrite(bool close, beast::error_code ec, std::size_t) {

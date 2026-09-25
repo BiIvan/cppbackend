@@ -8,10 +8,9 @@
 #include <iostream>
 #include <optional>
 #include <algorithm>
+#include <exception>
 #include <filesystem>
 #include <string_view>
-#include <boost/asio/post.hpp>
-
 #include <boost/json.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/beast/core.hpp>
@@ -406,35 +405,43 @@ public:
         const unsigned version = req.version();
         const bool keep_alive = req.keep_alive();
         try {
-        if (IsApiRequest(req)) {
-          auto handle = [
-            this,
-            req = std::move(req),
-            send,
-            version,
-            keep_alive
-          ]() mutable {
-            try {
-              http::request<http::string_body> string_request{
+          if (IsApiRequest(req)) {
+            auto handle = [
+              this,
+              req = std::move(req),
+              send = std::forward<Send>(send),
+              version,
+              keep_alive
+            ]() mutable {
+              try {
+                http::request<http::string_body> string_request{
                   std::move(req)
-              };
-              send(HandleApiRequest(string_request));
-            } catch (...) {
-              send(ReportServerError(version, keep_alive));
-            }
-          };
-          net::post(api_strand_, std::move(handle));
-          return;
-        }
-            http::request<http::string_body> string_request{
-                std::move(req)};
-            std::visit(
-                [&send](auto&& result) {
-                    send(std::forward<decltype(result)>(result));
-                },
-                HandleFileRequest(string_request));
+                };
+                send(HandleApiRequest(string_request));
+              } catch (const std::exception& ex) {
+                std::cerr << "API handler error: " << ex.what() << '\n';
+                send(ReportServerError(
+                  version,
+                  keep_alive));
+              } catch (...) {
+                std::cerr << "API handler error: unknown exception\n";
+                send(ReportServerError(
+                  version,
+                  keep_alive));
+              }
+            };
+            net::post(api_strand_, std::move(handle));
+            return;
+          }
+          http::request<http::string_body> string_request{
+            std::move(req)};
+          std::visit(
+            [&send](auto&& result) {
+              send(std::forward<decltype(result)>(result));
+            },
+            HandleFileRequest(string_request));
         } catch (...) {
-            send(ReportServerError(version, keep_alive));
+          send(ReportServerError(version, keep_alive));
         }
     }
 

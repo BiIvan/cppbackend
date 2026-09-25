@@ -272,22 +272,12 @@ namespace http_handler {
     const StringRequest& request) {
     constexpr std::string_view kBearerPrefix = "Bearer ";
     const auto authorization = request[http::field::authorization];
-    const std::string_view value{
-      authorization.data(),
-      authorization.size()
-    };
-    if (!value.starts_with(kBearerPrefix)) {
-      return std::nullopt;
-    }
-    const std::string_view token =
-      value.substr(kBearerPrefix.size());
-    if (token.size() != 32) {
-      return std::nullopt;
-    }
+    const std::string_view value{ authorization.data(), authorization.size() };
+    if (!value.starts_with(kBearerPrefix)) { return std::nullopt; }
+    const std::string_view token = value.substr(kBearerPrefix.size());
+    if (token.size() != 32) { return std::nullopt; }
     for (const unsigned char ch : token) {
-      if (!std::isxdigit(ch)) {
-        return std::nullopt;
-      }
+      if (!std::isxdigit(ch)) { return std::nullopt; }
     }
     return model::Token{std::string(token)};
   }
@@ -329,20 +319,15 @@ namespace http_handler {
       current_player->GetSession();
     json::object players_json;
     for (const auto& [player_id, player] : app_.GetPlayers()) {
-      if (&player.GetSession() != &current_session) {
-        continue;
-      }
+      if (&player.GetSession() != &current_session) { continue; }
       players_json.emplace(
         std::to_string(*player_id),
-        json::object{
-          {"name", player.GetDog().GetName()}
-        });
+        json::object{ {"name", player.GetDog().GetName()} }
+      );
     }
     StringResponse response = MakeJsonResponse(
-      http::status::ok,
-      request.version(),
-      request.keep_alive(),
-      std::move(players_json));
+      http::status::ok, request.version(),
+      request.keep_alive(), std::move(players_json));
     if (request.method() == http::verb::head) {
       response.body().clear();
       response.content_length(0);

@@ -65,47 +65,31 @@ int main(int argc, const char* argv[]) {
     std::signal(SIGINT, HandleSignal);
     std::signal(SIGTERM, HandleSignal);
     auto api_strand = net::make_strand(ioc);
-    http_handler::RequestHandler handler{
-        game,
-        static_root,
-        std::move(api_strand)};
+    http_handler::RequestHandler handler{ game, static_root, std::move(api_strand)};
     const auto address = net::ip::make_address("0.0.0.0");
     constexpr unsigned short port = 8080;
-    http_server::ServeHttp(
-      ioc,
-      tcp::endpoint{address, port},
-      handler);
+    http_server::ServeHttp( ioc, tcp::endpoint{address, port}, handler);
     BOOST_LOG_TRIVIAL(info)
       << logging::add_value(
-      additional_data,
-      json::object{
-        {"port", port},
-        {"address", address.to_string()},
-      })
+        additional_data, json::object{ {"port", port}, {"address", address.to_string()}, }
+      )
       << "server started";
     logging::core::get()->flush();
     std::cout.flush();
-    RunWorkers(num_threads, [&ioc] {
-      ioc.run();
-    });
+    RunWorkers(num_threads, [&ioc] { ioc.run(); });
     g_ioc = nullptr;
     BOOST_LOG_TRIVIAL(info)
       << logging::add_value(
-        additional_data,
-        json::object{
-          {"code", EXIT_SUCCESS},
-        })
+          additional_data, json::object{ {"code", EXIT_SUCCESS}, }
+        )
       << "server exited";
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {
     g_ioc = nullptr;
     BOOST_LOG_TRIVIAL(error)
       << logging::add_value(
-        additional_data,
-        json::object{
-          {"code", EXIT_FAILURE},
-          {"exception", ex.what()},
-        })
+          additional_data, json::object{ {"code", EXIT_FAILURE}, {"exception", ex.what()}, }
+        )
       << "server exited";
     return EXIT_FAILURE;
   }

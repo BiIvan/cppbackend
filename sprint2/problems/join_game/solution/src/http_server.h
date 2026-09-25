@@ -181,8 +181,7 @@ namespace http_server {
   };
 
   template <typename RequestHandler>
-  class Listener
-    : public std::enable_shared_from_this<Listener<RequestHandler>> {
+  class Listener  : public std::enable_shared_from_this<Listener<RequestHandler>> {
     using RH = RequestHandler;
     void DoAccept() {
       acceptor_.async_accept(

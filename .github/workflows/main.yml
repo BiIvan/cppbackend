@@ -207,6 +207,22 @@ jobs:
           cd cpp-backend-tests-practicum/scripts/sprint2
           ./server_logging/run.sh
 
+      - name: Configure Docker build network
+        run: |
+          set -euxo pipefail     
+          mkdir -p "$GITHUB_WORKSPACE/.ci-bin"      
+          cat > "$GITHUB_WORKSPACE/.ci-bin/docker" <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail      
+          if [[ "${1:-}" == "build" ]]; then
+            shift
+            exec /usr/bin/docker build --network=host "$@"
+          fi     
+          exec /usr/bin/docker "$@"
+          EOF      
+          chmod +x "$GITHUB_WORKSPACE/.ci-bin/docker"      
+          echo "PATH=$GITHUB_WORKSPACE/.ci-bin:$PATH" >> "$GITHUB_ENV"
+          
       - name: run tests sprint2 join_game
         run: |
           cd cpp-backend-tests-practicum/scripts/sprint2

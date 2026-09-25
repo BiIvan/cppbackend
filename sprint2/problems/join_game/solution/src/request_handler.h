@@ -32,66 +32,7 @@ namespace fs = std::filesystem;
 
 using tcp = net::ip::tcp;
 
-class RequestHandler : public std::enable_shared_from_this<RequestHandler> {
-public:
-    using Strand = net::strand<net::io_context::executor_type>;
-
-    explicit RequestHandler(
-        model::Game& game,
-        fs::path static_root,
-        Strand api_strand)
-        : game_(game)
-        , app_(game_)
-        , static_root_{
-              fs::weakly_canonical(fs::absolute(std::move(static_root)))}
-        , api_strand_(std::move(api_strand)) {
-    }
-
-    RequestHandler(const RequestHandler&) = delete;
-    RequestHandler& operator=(const RequestHandler&) = delete;
-
-    template <typename Body, typename Allocator, typename Send>
-    void operator()(
-        http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
-        const unsigned version = req.version();
-        const bool keep_alive = req.keep_alive();
-        try {
-            if (IsApiRequest(req)) {
-              auto handle = [
-                  self = shared_from_this(),
-                  req = std::move(req),
-                  send,
-                  version,
-                  keep_alive
-              ]() mutable {
-                  try {
-                      http::request<http::string_body> string_request{
-                          std::move(req)};
-                      send(self->HandleApiRequest(string_request));
-                  } catch (const std::exception& ex) {
-                      std::cerr << "API request failed: " << ex.what() << '\n';
-                      send(self->ReportServerError(version, keep_alive));
-                  } catch (...) {
-                      std::cerr << "API request failed: unknown exception\n";
-                      send(self->ReportServerError(version, keep_alive));
-                  }
-              };
-              net::post(api_strand_, std::move(handle));
-              return;
-            }
-            http::request<http::string_body> string_request{
-                std::move(req)};
-            std::visit(
-                [&send](auto&& result) {
-                    send(std::forward<decltype(result)>(result));
-                },
-                HandleFileRequest(string_request));
-        } catch (...) {
-            send(ReportServerError(version, keep_alive));
-        }
-    }
-
-private:
+class RequestHandler {
     using StringRequest = http::request<http::string_body>;
     using StringResponse = http::response<http::string_body>;
     using EmptyResponse = http::response<http::empty_body>;
@@ -441,6 +382,66 @@ private:
             keep_alive,
             SerializeMap(map));
     }
+    
+public:
+    using Strand = net::strand<net::io_context::executor_type>;
+
+    explicit RequestHandler(
+        model::Game& game,
+        fs::path static_root,
+        Strand api_strand)
+        : game_(game)
+        , app_(game_)
+        , static_root_{
+              fs::weakly_canonical(fs::absolute(std::move(static_root)))}
+        , api_strand_(std::move(api_strand)) {
+    }
+
+    RequestHandler(const RequestHandler&) = delete;
+    RequestHandler& operator=(const RequestHandler&) = delete;
+
+    template <typename Body, typename Allocator, typename Send>
+    void operator()(
+        http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
+        const unsigned version = req.version();
+        const bool keep_alive = req.keep_alive();
+        try {
+            if (IsApiRequest(req)) {
+                auto handle = [
+                    this,
+                    req = std::move(req),
+                    send,
+                    version,
+                    keep_alive
+                ]() mutable {
+                    try {
+                        http::request<http::string_body> string_request{
+                            std::move(req)
+                        };
+                        send(HandleApiRequest(string_request));
+                    } catch (const std::exception& ex) {
+                        std::cerr << "API request failed: " << ex.what() << '\n';
+                        send(ReportServerError(version, keep_alive));
+                    } catch (...) {
+                        std::cerr << "API request failed: unknown exception\n";
+                        send(ReportServerError(version, keep_alive));
+                    }
+                };
+                net::post(api_strand_, std::move(handle));
+                return;
+            }            
+            http::request<http::string_body> string_request{
+                std::move(req)};
+            std::visit(
+                [&send](auto&& result) {
+                    send(std::forward<decltype(result)>(result));
+                },
+                HandleFileRequest(string_request));
+        } catch (...) {
+            send(ReportServerError(version, keep_alive));
+        }
+    }
+
 };
 
 }  // namespace http_handler

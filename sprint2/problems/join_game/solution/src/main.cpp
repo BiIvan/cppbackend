@@ -65,17 +65,16 @@ int main(int argc, const char* argv[]) {
     std::signal(SIGINT, HandleSignal);
     std::signal(SIGTERM, HandleSignal);
     auto api_strand = net::make_strand(ioc);
-    auto handler = std::make_shared<http_handler::RequestHandler>(
-      game,
-      static_root,
-      std::move(api_strand)
-    );
+    http_handler::RequestHandler handler{
+        game,
+        static_root,
+        std::move(api_strand)};
     const auto address = net::ip::make_address("0.0.0.0");
     constexpr unsigned short port = 8080;
     http_server::ServeHttp(
       ioc,
       tcp::endpoint{address, port},
-      *handler);
+      handler);
     BOOST_LOG_TRIVIAL(info)
       << logging::add_value(
       additional_data,

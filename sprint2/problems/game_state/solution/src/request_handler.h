@@ -348,5 +348,34 @@ namespace http_handler {
           send(ReportServerError(version, keep_alive));
         }
     }
+    
+    template <typename Fn>
+      StringResponse ExecuteAuthorized(
+      const StringRequest& request,
+      Fn&& action) {
+      const auto token = ExtractBearerToken(request);
+      if (!token) {
+        return MakeErrorResponse(
+          http::status::unauthorized,
+          request.version(),
+          request.keep_alive(),
+          "invalidToken",
+          "Authorization header is required");
+      }
+      model::Player* player = app_.FindPlayerByToken(*token);
+      if (player == nullptr) {
+        return MakeErrorResponse(
+          http::status::unauthorized,
+          request.version(),
+          request.keep_alive(),
+          "unknownToken",
+          "Player token has not been found");
+      }
+      return std::forward<Fn>(action)(*player);
+    }
+
+    StringResponse HandleGameStateRequest(const StringRequest& request);
+    StringResponse HandlePlayerActionRequest(const StringRequest& request);
+    
   };
 }  // namespace http_handler

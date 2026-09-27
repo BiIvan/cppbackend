@@ -160,6 +160,10 @@ namespace model {
       return *session_;
     }
     
+    Dog& GetDog() noexcept {
+      return *dog_;
+    }
+    
     const Dog& GetDog() const noexcept {
       return *dog_;
     }

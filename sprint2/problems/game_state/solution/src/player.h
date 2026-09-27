@@ -167,7 +167,7 @@ namespace model {
   
   class Players {
     std::uint64_t next_player_id_ = 0;
-    std::unordered_map<PlayerId, Player, util::TaggedHasher> players_;
+    std::unordered_map<PlayerId, Player, util::TaggedHasher<PlayerId>> players_;
     
   public:
     Player& Add(Dog& dog, GameSession& session) {
@@ -208,7 +208,7 @@ namespace model {
     }
     
     std::mt19937_64 generator_;
-    std::unordered_map<Token, Player*, util::TaggedHasher> token_to_player_;
+    std::unordered_map<Token, Player*, util::TaggedHasher<Token>> token_to_player_;
     
   public:
     PlayerTokens()

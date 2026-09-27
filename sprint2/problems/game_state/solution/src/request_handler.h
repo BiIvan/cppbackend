@@ -374,7 +374,6 @@ namespace http_handler {
       return std::forward<Fn>(action)(*player);
     }
 
-    StringResponse HandleGameStateRequest(const StringRequest& request);
     StringResponse HandlePlayerActionRequest(const StringRequest& request);
     
   };

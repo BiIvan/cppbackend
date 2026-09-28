@@ -159,6 +159,9 @@ namespace http_handler {
     if (target == "/api/v1/game/player/action") {
       return HandlePlayerActionRequest(request);
     }
+    if (target == "/api/v1/game/tick") {
+      return HandleTickRequest(request);
+    }
     if (target == "/api/v1/maps") {
      if (request.method() != http::verb::get &&
        request.method() != http::verb::head) {
@@ -541,5 +544,53 @@ namespace http_handler {
       }
     );
   }  
+  
+  RequestHandler::StringResponse RequestHandler::HandleTickRequest(
+    const StringRequest& request) {
+    if (request.method() != http::verb::post) {
+      auto response = MakeErrorResponse(
+        http::status::method_not_allowed,
+        request.version(),
+        request.keep_alive(),
+        "invalidMethod",
+        "Only POST method is expected");
+      response.set(http::field::allow, "POST");
+      return response;
+    }
+    if (!IsJsonContentType(request)) {
+      return MakeErrorResponse(
+        http::status::bad_request,
+        request.version(),
+        request.keep_alive(),
+        "invalidArgument",
+        "Expected application/json");
+    }
+    std::int64_t delta_ms;
+    try {
+      const json::value body = json::parse(request.body());
+      const json::object& object = body.as_object();
+      const json::value& delta = object.at("timeDelta");
+      if (!delta.is_int64()) {
+          throw std::invalid_argument("Invalid timeDelta");
+      }
+      delta_ms = delta.as_int64();
+      if (delta_ms < 0) {
+          throw std::invalid_argument("Negative timeDelta");
+      }
+    } catch (const std::exception&) {
+      return MakeErrorResponse(
+        http::status::bad_request,
+        request.version(),
+        request.keep_alive(),
+        "invalidArgument",
+        "Failed to parse tick request JSON");
+    }
+    app_.Tick(delta_ms);
+    return MakeJsonResponse(
+      http::status::ok,
+      request.version(),
+      request.keep_alive(),
+      json::object{});
+  }
 
 } // namespace http_handler

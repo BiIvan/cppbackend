@@ -516,8 +516,7 @@ namespace http_handler {
             "Invalid action");
         }
         model::Dog& dog = player.GetDog();
-        // Замените на скорость из вашей конфигурации игры/карты.
-        const double dog_speed = 1.0;
+        const double dog_speed = player.GetSession().GetMap().GetDogSpeed();
         if (move == "L") {
           dog.SetMove(model::Direction::WEST, dog_speed);
         } else if (move == "R") {

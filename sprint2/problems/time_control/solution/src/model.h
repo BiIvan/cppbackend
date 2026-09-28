@@ -113,20 +113,20 @@ private:
     Offset offset_;
 };
 
-class Map {
-public:
+  class Map {
+  public:
     using Id = util::Tagged<std::string, Map>;
     using Roads = std::vector<Road>;
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
-    Map(Id id, std::string name) noexcept
-        : id_(std::move(id))
-        , name_(std::move(name)) {
+    Map(Id id, std::string name, double dog_speed) noexcept
+      : id_(std::move(id))
+      , name_(std::move(name)){
     }
 
     const Id& GetId() const noexcept {
-        return id_;
+      return id_;
     }
 
     const std::string& GetName() const noexcept {
@@ -152,20 +152,33 @@ public:
     void AddBuilding(const Building& building) {
         buildings_.emplace_back(building);
     }
+    
+    double GetDogSpeed() const noexcept {
+      return dog_speed_;
+    }
+    
+    void SetDogSpeed(double speed) noexcept {
+      dog_speed_ = speed;
+    }
+
+    double GetDogSpeed() const noexcept {
+      return dog_speed_;
+    }
 
     void AddOffice(Office office);
 
-private:
+  private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
 
     Id id_;
     std::string name_;
     Roads roads_;
     Buildings buildings_;
+    double dog_speed_{ 1.0};
 
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
-};
+  };
 
 class Game {
 public:

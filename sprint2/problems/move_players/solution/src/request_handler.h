@@ -21,12 +21,6 @@
 #include "model.h"
 #include "application.h"
 
-using StringRequest = http::request<http::string_body>;
-using StringResponse = http::response<http::string_body>;
-using EmptyResponse = http::response<http::empty_body>;
-using FileResponse = http::response<http::file_body>;
-using FileRequestResult = std::variant< StringResponse, EmptyResponse, FileResponse>;
-
 namespace http_handler {
   
   namespace net = boost::asio;
@@ -39,7 +33,12 @@ namespace http_handler {
   using Strand = net::strand<net::io_context::executor_type>;
   
   class RequestHandler {
-      
+    using StringRequest = http::request<http::string_body>;
+    using StringResponse = http::response<http::string_body>;
+    using EmptyResponse = http::response<http::empty_body>;
+    using FileResponse = http::response<http::file_body>;
+    using FileRequestResult = std::variant< StringResponse, EmptyResponse, FileResponse>;
+
     FileRequestResult HandleFileRequest( const StringRequest& req) const;
     StringResponse HandleApiRequest( const StringRequest& request);
     StringResponse HandleJoinGameRequest( const StringRequest& request);

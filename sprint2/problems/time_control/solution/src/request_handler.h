@@ -37,16 +37,16 @@ namespace http_handler {
     using StringResponse = http::response<http::string_body>;
     using EmptyResponse = http::response<http::empty_body>;
     using FileResponse = http::response<http::file_body>;
-    using FileRequestResult = std::variant<
-      StringResponse,
-      EmptyResponse,
-      FileResponse>;
-      
+    using FileRequestResult = std::variant< StringResponse, EmptyResponse, FileResponse>;
+
     FileRequestResult HandleFileRequest( const StringRequest& req) const;
     StringResponse HandleApiRequest( const StringRequest& request);
     StringResponse HandleJoinGameRequest( const StringRequest& request);
     StringResponse HandlePlayersRequest( const StringRequest& request);
+    StringResponse HandleGameStateRequest(const StringRequest& request);
     StringResponse ReportServerError( unsigned version, bool keep_alive) const;
+    StringResponse HandlePlayerActionRequest( const StringRequest& request);
+    StringResponse HandleTickRequest(const StringRequest& request);
     
     model::Game& game_;
     app::Application app_;
@@ -200,8 +200,31 @@ namespace http_handler {
       return beast::iequals(media_type, "application/json");
     }
     
-    static std::optional<model::Token> ExtractBearerToken(
-      const StringRequest& request);
+    static std::optional<model::Token> ExtractBearerToken( const StringRequest& request);
+
+    template <typename Fn>
+    StringResponse ExecuteAuthorized( const StringRequest& request, Fn&& action) {
+      const auto token = ExtractBearerToken(request);
+      if (!token) {
+        return MakeErrorResponse(
+          http::status::unauthorized,
+          request.version(),
+          request.keep_alive(),
+          "invalidToken",
+          "Authorization header is required");
+      }
+      model::Player* player = app_.FindPlayerByToken(*token);
+      if (player == nullptr) {
+        return MakeErrorResponse(
+          http::status::unauthorized,
+          request.version(),
+          request.keep_alive(),
+          "unknownToken",
+          "Player token has not been found");
+      }
+      return std::forward<Fn>(action)(*player);
+    }
+      
     static json::object SerializeRoad(const model::Road& road) {
       const model::Point start = road.GetStart();
       const model::Point end = road.GetEnd();
@@ -300,11 +323,12 @@ namespace http_handler {
               fs::weakly_canonical(fs::absolute(std::move(static_root)))}
         , api_strand_(std::move(api_strand)) {
     }
+    
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
+    
     template <typename Body, typename Allocator, typename Send>
-    void operator()(
-        http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
+    void operator()( http::request<Body, http::basic_fields<Allocator>>&& req, Send&& send) {
         const unsigned version = req.version();
         const bool keep_alive = req.keep_alive();
         try {

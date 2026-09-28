@@ -52,15 +52,15 @@ namespace json_loader {
     model::Map ParseMap(
       const json::object& map_json,
       double default_dog_speed) {
+      const json::value* configured_speed = map_json.if_contains("dogSpeed");
+      const double dog_speed = configured_speed
+        ? json::value_to<double>(*configured_speed)
+        : default_dog_speed;
       model::Map map{
         model::Map::Id{GetString(map_json, "id")},
-        GetString(map_json, "name")
+        GetString(map_json, "name"),
+        dog_speed
       };
-      double dog_speed = default_dog_speed;
-      if (const json::value* value = map_json.if_contains("dogSpeed")) {
-        dog_speed = json::value_to<double>(*value);
-      }
-      map.SetDogSpeed(dog_speed);
       for (const json::value& value : map_json.at("roads").as_array()) {
         map.AddRoad(ParseRoad(value.as_object()));
       }

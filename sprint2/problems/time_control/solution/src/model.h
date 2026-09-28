@@ -120,9 +120,10 @@ private:
     using Buildings = std::vector<Building>;
     using Offices = std::vector<Office>;
 
-    Map(Id id, std::string name, double dog_speed) noexcept
+    Map(Id id, std::string name, double dog_speed = 1.0) noexcept
       : id_(std::move(id))
-      , name_(std::move(name)){
+      , name_(std::move(name))
+      , dog_speed_(dog_speed) {
     }
 
     const Id& GetId() const noexcept {

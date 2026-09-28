@@ -359,7 +359,7 @@ namespace http_handler {
 
 }  // namespace
   
-  RequestHandler::StringResponse RequestHandler::HandleGameStateRequest(
+/*  RequestHandler::StringResponse RequestHandler::HandleGameStateRequest(
     const StringRequest& request) {
     if (request.method() != http::verb::get &&
       request.method() != http::verb::head) {
@@ -427,7 +427,7 @@ namespace http_handler {
       response.content_length(0);
     }
     return response;
-  } 
+  } */
   
   RequestHandler::StringResponse RequestHandler::HandleGameStateRequest(
     const StringRequest& request) {

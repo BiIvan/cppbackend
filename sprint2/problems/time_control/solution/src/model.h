@@ -161,10 +161,6 @@ private:
       dog_speed_ = speed;
     }
 
-    double GetDogSpeed() const noexcept {
-      return dog_speed_;
-    }
-
     void AddOffice(Office office);
 
   private:

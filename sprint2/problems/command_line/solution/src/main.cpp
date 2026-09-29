@@ -15,7 +15,6 @@
 
 #include "logger.h"
 #include "ticker.h"
-#include "literals.h"
 #include "http_server.h"
 #include "json_loader.h"
 #include "request_handler.h"
@@ -27,14 +26,13 @@ namespace po = boost::program_options;
 
 using tcp = net::ip::tcp;
 using namespace std::literals;
-using mSeconds = std::chrono::milliseconds;
 
 namespace {
 
   struct Args {
     fs::path config_file;
     fs::path www_root;
-    std::optional<mSeconds> tick_period;
+    std::optional<std::chrono::milliseconds> tick_period;
     bool randomize_spawn_points = false;
   };
 
@@ -98,7 +96,7 @@ namespace {
         throw std::invalid_argument(
           "--tick-period must be greater than zero");
       }
-      args.tick_period = mSeconds{ms};
+      args.tick_period = std::chrono::milliseconds{ms};
     }
     return args;
   }
@@ -131,7 +129,7 @@ int main(int argc, const char* argv[]) {
       ticker = std::make_shared<Ticker>(
         api_strand,
         *args->tick_period,
-        [&handler](mSeconds delta) {
+        [&handler](std::chrono::milliseconds delta) {
           handler.GetApplication().Tick(delta.count());
         });
       ticker->Start();
@@ -140,21 +138,27 @@ int main(int argc, const char* argv[]) {
     constexpr unsigned short port = 8080; 
     http_server::ServeHttp( ioc, tcp::endpoint{address, port}, handler);
     BOOST_LOG_TRIVIAL(info)
-      << logging::add_value( additional_data, json::object{ {"port", port}, {"address", address.to_string()}, })
-      << SRVSTR;
+      << logging::add_value(
+        additional_data, json::object{ {"port", port}, {"address", address.to_string()}, }
+      )
+      << "server started";
     logging::core::get()->flush();
     std::cout.flush();
     RunWorkers(num_threads, [&ioc] { ioc.run(); });
     g_ioc = nullptr;
     BOOST_LOG_TRIVIAL(info)
-      << logging::add_value( additional_data, json::object{ {COD, EXIT_SUCCESS}, })
-      << SRVEXT;
+      << logging::add_value(
+          additional_data, json::object{ {"code", EXIT_SUCCESS}, }
+        )
+      << "server exited";
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {
     g_ioc = nullptr;
     BOOST_LOG_TRIVIAL(error)
-      << logging::add_value( additional_data, json::object{ {COD, EXIT_FAILURE}, {EXPT, ex.what()}, })
-      << SRVEXT;
+      << logging::add_value(
+          additional_data, json::object{ {"code", EXIT_FAILURE}, {"exception", ex.what()}, }
+        )
+      << "server exited";
     return EXIT_FAILURE;
   }
 }

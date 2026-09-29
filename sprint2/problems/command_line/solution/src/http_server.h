@@ -18,7 +18,6 @@
 #include "literals.h"
 
 constexpr int ExpiredTime = 30;
-using Bind = beast::bind_front_handler;
 using mSeconds = std::chrono::milliseconds;
 
 namespace http_server {
@@ -64,7 +63,7 @@ namespace http_server {
           << RSENT;
         session_->response_ = response_ptr;
         http::async_write( session_->stream_, *response_ptr
-          , Bind( &HttpSession::OnWrite, session_, response_ptr->need_eof()));
+          , beast::bind_front_handler( &HttpSession::OnWrite, session_, response_ptr->need_eof()));
       }
     };
 
@@ -72,7 +71,7 @@ namespace http_server {
       request_ = {};
       stream_.expires_after(std::chrono::seconds(ExpiredTime));
       http::async_read( stream_, buffer_, request_
-        , Bind(&HttpSession::OnRead,this->shared_from_this()));
+        , beast::bind_front_handler(&HttpSession::OnRead,this->shared_from_this()));
     }
 
     void OnRead(beast::error_code ec, std::size_t) {
@@ -132,7 +131,7 @@ namespace http_server {
 
     void Run() {
       net::dispatch( stream_.get_executor()
-        , Bind(&HttpSession::Read,this->shared_from_this()));
+        , beast::bind_front_handler(&HttpSession::Read,this->shared_from_this()));
     }
   };
 
@@ -141,7 +140,7 @@ namespace http_server {
     using RH = RequestHandler;
     void DoAccept() {
       acceptor_.async_accept( net::make_strand(ioc_)
-        , Bind(&Listener::OnAccept,this->shared_from_this()));
+        , beast::bind_front_handler(&Listener::OnAccept,this->shared_from_this()));
     }
 
     void OnAccept(beast::error_code ec, tcp::socket socket) {

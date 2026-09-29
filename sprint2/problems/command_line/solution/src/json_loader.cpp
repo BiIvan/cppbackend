@@ -5,6 +5,7 @@
 #include <string_view>
 #include <boost/json.hpp>
 
+#include "literals.h"
 #include "json_loader.h"
 
 using MAP = model::Map;

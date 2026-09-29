@@ -32,7 +32,7 @@ namespace json_loader {
       if (road.if_contains(Y1)) {
         return model::Road{ model::Road::VERTICAL, start, GetInt(road, Y1)};
       }
-      throw std::invalid_argument(ROADERR);
+      throw std::invalid_argument(std::string{ROADERR});
     }
 
     model::Building ParseBuilding(const json::object& building) {
@@ -75,7 +75,7 @@ namespace json_loader {
   model::Game LoadGame(const std::filesystem::path& json_path) {
     std::ifstream input{json_path};
     if (!input) {
-      throw std::runtime_error(NOCONFIG + json_path.string());
+      throw std::runtime_error(std::string{NOCONFIG} + json_path.string());
     }
     std::stringstream buffer;
     buffer << input.rdbuf();

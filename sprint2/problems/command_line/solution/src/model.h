@@ -195,7 +195,10 @@ namespace model {
       
       const Map* FindMap(const Map::Id& id) const noexcept {
         auto it{ map_id_to_index_.find(id)}; 
-        it != map_id_to_index_.end()) ? return &maps_.at(it->second) : return nullptr;
+        if( it != map_id_to_index_.end()){
+          return &maps_.at(it->second);
+        }
+        return nullptr;
       }
   };
 }  // namespace model

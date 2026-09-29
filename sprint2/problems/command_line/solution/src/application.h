@@ -11,7 +11,7 @@
 #include "player.h"
 #include "literals.h"
 
-using GS = GS;
+using GS = model::GameSession;
 
 namespace app {
 

@@ -223,7 +223,7 @@ namespace model {
     Dog& AddDog(std::string name) {
       const auto& roads = map_->GetRoads();
       if (roads.empty()) {
-        throw std::logic_error( NOROADS);
+        throw std::logic_error(std::string{NOROADS});
       }
       Position position;
       if (randomize_spawn_points_) {

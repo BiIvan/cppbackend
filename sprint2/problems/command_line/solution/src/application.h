@@ -18,8 +18,10 @@ namespace app {
   class Application {
     GS& GetOrCreateSession(const model::Map& map) {
       const std::string map_id { *map.GetId()};
-      auto it{sessions_.find(map_id)};
-      it != sessions_.end() ? return *it->second : NOP();
+      if (auto it = sessions_.find(map_id);
+        it != sessions_.end()) {
+        return *it->second;
+      }
       auto session = std::make_unique<GS>( &map, randomize_spawn_points_);
       GS* result = session.get();
       sessions_.emplace(map_id, std::move(session));
@@ -52,7 +54,9 @@ namespace app {
 
     JoinResult JoinGame( const model::Map::Id& map_id, std::string user_name) {
       const model::Map* map{ game_.FindMap(map_id)};
-      map == nullptr ? throw std::out_of_range(NOMAPstr) : NOP();
+      if (map == nullptr) {
+        throw std::out_of_range(std::string{NOMAPstr});
+      }
       GS& session = GetOrCreateSession(*map);
       model::Dog& dog = session.AddDog(std::move(user_name));
       model::Player& player = players_.Add(dog, session);

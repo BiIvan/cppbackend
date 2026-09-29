@@ -36,7 +36,6 @@ inline constexpr std::string_view BUILD = "buildings";
 inline constexpr std::string_view SPEEDOG = "dogSpeed";
 inline constexpr std::string_view TIMEST = "timestamp";
 inline constexpr std::string_view TIK = "Ticker::OnTick";
-inline constexpr std::string_view NOMAP = "Map not found";
 inline constexpr std::string_view RSENT = "response sent";
 inline constexpr std::string_view RTIME = "response_time";
 inline constexpr std::string_view CONTENT = "content_type";
@@ -89,5 +88,3 @@ inline constexpr std::string_view INVRQT = "Invalid request target\n";
 inline constexpr std::string_view INVURL = "Invalid URL encoding\n";
 inline constexpr std::string_view NEED = "Only GET and HEAD methods are supported\n";
 inline constexpr std::string_view NOROADS = "Cannot add dog to a map without roads";
-
-void NOP();

@@ -290,11 +290,11 @@ namespace http_handler {
       const json::object& object = body.as_object();
       const json::value& delta = object.at(TD);
       if (!delta.is_int64()) {
-          throw std::invalid_argument(InvTD);
+          throw std::invalid_argument(std::string{ InvTD});
       }
       delta_ms = delta.as_int64();
       if (delta_ms < 0) {
-          throw std::invalid_argument(NegTD);
+          throw std::invalid_argument(std::string{ NegTD});
       }
     } catch (const std::exception&) {
       return MakeErrorResponse( http::status::bad_request, request.version(), request.keep_alive(), std::string{ INVARG}, std::string{ FailedPARSE});

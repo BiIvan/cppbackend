@@ -32,7 +32,6 @@ PERF_DATA = SCRIPT_DIR / 'perf.data'
 GRAPH_SVG = SCRIPT_DIR / 'graph.svg'
 PERF_LOG = SCRIPT_DIR / 'perf.log'
 
-
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Start server, profile it with perf, send requests and build flame graph.'
@@ -40,19 +39,19 @@ def parse_args():
 
     parser.add_argument(
         'server',
-        nargs=argparse.REMAINDER,
+        nargs='+',
         help='Server command and its arguments'
     )
 
     args = parser.parse_args()
 
-    if not args.server:
-        parser.error(
-            'Specify server command, for example:\n'
-            '  python3 shoot.py ./build/bin/game_server data/config.json'
-        )
+    command = ' '.join(args.server)
+    server_command = shlex.split(command)
 
-    return args
+    if not server_command:
+        parser.error('Server command must not be empty')
+
+    return server_command
 
 
 def require_file(path: Path):

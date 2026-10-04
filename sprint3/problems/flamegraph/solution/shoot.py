@@ -33,25 +33,12 @@ GRAPH_SVG = SCRIPT_DIR / 'graph.svg'
 PERF_LOG = SCRIPT_DIR / 'perf.log'
 
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description='Start server, profile it with perf, send requests and build flame graph.'
-    )
-
-    parser.add_argument(
-        'server',
-        nargs='+',
-        help='Server command and its arguments'
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument('server', nargs='+', type=str)
 
     args = parser.parse_args()
 
-    command = ' '.join(args.server)
-    server_command = shlex.split(command)
-
-    if not server_command:
-        parser.error('Server command must not be empty')
-
-    return server_command
+    return shlex.split(' '.join(args.server))
 
 
 def require_file(path: Path):
@@ -59,7 +46,7 @@ def require_file(path: Path):
         raise FileNotFoundError(f'Required file not found: {path}')
 
 
-def check_environment(args):
+def check_environment(server_command):
     if os.name != 'posix':
         raise RuntimeError(
             'This script requires Linux/WSL: Linux perf cannot profile a Windows process.'
@@ -71,11 +58,10 @@ def check_environment(args):
             'sudo apt install linux-tools-common linux-tools-$(uname -r)'
         )
 
-    if args.server[0].lower().endswith('.exe'):
+    if server_command[0].lower().endswith('.exe'):
         raise RuntimeError(
             'Windows .exe cannot be profiled with Linux perf.\n'
-            'Build and pass the Linux ELF executable, for example:\n'
-            './build/bin/game_server'
+            'Build and pass the Linux ELF executable.'
         )
 
 
@@ -245,8 +231,8 @@ def build_flamegraph():
 
 
 def main():
-    args = parse_args()
-    check_environment(args)
+    server_command = parse_args()
+    check_environment(server_command)
 
     stackcollapse = FLAMEGRAPH_DIR / 'stackcollapse-perf.pl'
     flamegraph = FLAMEGRAPH_DIR / 'flamegraph.pl'
@@ -264,10 +250,10 @@ def main():
 
     try:
         print('Starting server:')
-        print(' ', shlex.join(args.server))
+        print(' ', shlex.join(server_command))
 
         server = subprocess.Popen(
-            args.server,
+            server_command,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )

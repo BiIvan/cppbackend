@@ -13,6 +13,7 @@ endif()
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
@@ -20,18 +21,18 @@ find_package(Boost REQUIRED)
 find_package(Threads REQUIRED)
 
 add_executable(game_server
-        src/main.cpp
-        src/http_server.cpp
-        src/http_server.h
-        src/sdk.h
-        src/model.h
-        src/model.cpp
-        src/tagged.h
-        src/boost_json.cpp
-        src/json_loader.h
-        src/json_loader.cpp
-        src/request_handler.cpp
-        src/request_handler.h
+    src/main.cpp
+    src/http_server.cpp
+    src/http_server.h
+    src/sdk.h
+    src/model.h
+    src/model.cpp
+    src/tagged.h
+    src/boost_json.cpp
+    src/json_loader.h
+    src/json_loader.cpp
+    src/request_handler.cpp
+    src/request_handler.h
 )
 
 target_link_libraries(game_server PRIVATE
@@ -45,4 +46,10 @@ if(WIN32)
         _WIN32_WINNT=0x0A00
         WINVER=0x0A00
     )
+
+    target_link_libraries(game_server PRIVATE
+        ws2_32
+        mswsock
+    )
 endif()
+

@@ -1,0 +1,22 @@
+
+overload:
+  enabled: false
+
+phantom:
+  phantom_path: /usr/local/bin/phantom
+  address: 158.160.207.137:80
+  ammo_type: uri
+  load_profile:
+    load_type: rps
+    schedule: line(5, 30, 1m)
+  ssl: false
+
+autostop:
+  autostop:
+    - http(5xx,10%,5s)
+
+console:
+  enabled: false
+
+telegraf:
+  enabled: false

@@ -1,0 +1,11 @@
+[settings]
+os=Windows
+arch=x86_64
+compiler=gcc
+compiler.version=16
+compiler.libcxx=libstdc++11
+build_type=Release
+
+[env]
+CC=F:/msys64/ucrt64/bin/gcc.exe
+CXX=F:/msys64/ucrt64/bin/g++.exe

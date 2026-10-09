@@ -122,3 +122,48 @@ TEST_CASE("State still requires authorization", "[api]") {
     const auto response = Request(*fixture.handler, fixture.ioc, http::verb::get, "/api/v1/game/state");
     CHECK(response.result() == http::status::unauthorized);
 }
+
+TEST_CASE( "Map endpoints reject unsupported methods with 405", "[api]" ) {
+    Fixture fixture;
+
+    for (const char* target : {
+             "/api/v1/maps",
+             "/api/v1/maps/map1",
+             "/api/v1/maps/map2"
+         }) {
+        for (const auto method : {
+                 http::verb::options,
+                 http::verb::post,
+                 http::verb::put,
+                 http::verb::patch,
+                 http::verb::delete_
+             }) {
+            INFO("target: " << target);
+            INFO("method: " << http::to_string(method));
+
+            const auto response = Request(
+                *fixture.handler,
+                fixture.ioc,
+                method,
+                target
+            );
+
+            CHECK(
+                response.result() ==
+                http::status::method_not_allowed
+            );
+            CHECK(
+                response[http::field::allow] == "GET, HEAD"
+            );
+
+            const auto body =
+                json::parse(response.body()).as_object();
+
+            CHECK(
+                json::value_to<std::string>(
+                    body.at("code")
+                ) == "invalidMethod"
+            );
+        }
+    }
+}

@@ -32,15 +32,22 @@ COPY CMakeLists.txt ./
 
 # Catch2 3.1.0 использует std::uint64_t без явного подключения <cstdint>.
 # Для сборки старой версии с GCC 13 подключаем заголовок принудительно.
+# Boost: отключаем предкомпилированные заголовки.
+# Catch2 3.1.0: компенсируем отсутствующий include <cstdint> при сборке с GCC 13.
 RUN mkdir -p build && cd build && \
     conan install .. \
         --build=missing \
         -pr:h default \
         -pr:b default \
-        -c 'tools.build:cxxflags=["-include", "cstdint"]' && \
+        -s:h build_type=Release \
+        -s:b build_type=Release \
+        -s:h compiler.cppstd=20 \
+        -s:b compiler.cppstd=20 \
+        -o boost:pch=False \
+        -c 'catch2/*:tools.build:cxxflags=["-include", "cstdint"]' && \
     echo "=== Boost targets ===" && \
     (grep -R "add_library(Boost::" -n . || true)
-
+    
 # --- Только теперь копируем исходники ---
 COPY ./src ./src/
 COPY ./tests ./tests/

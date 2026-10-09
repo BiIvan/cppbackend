@@ -725,7 +725,7 @@ sprint3/problems/flamegraph/solution/perf.*
 sprint3/problems/flamegraph/solution/graph.svg
 */**/build/
 **/.pytest_cache/
-.venv
+.venv*
 # XML Results
 *.xml
 
@@ -736,4 +736,8 @@ sprint3/problems/flamegraph/solution/graph.svg
 
 #conan 1 build
 build-conan*
+
+#Conan environment
+.venv-conan1/*
+
 

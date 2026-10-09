@@ -1,73 +1,59 @@
-#include <cmath>
 #include <catch2/catch_test_macros.hpp>
+#include <chrono>
+#include "loot_generator.h"
 
-#include "../src/loot_generator.h"
+using namespace std::chrono_literals;
 
-using namespace std::literals;
+TEST_CASE("No looters or no shortage means no loot", "[loot_generator]") {
+    loot_gen::LootGenerator generator{1s, 1.0};
+    CHECK(generator.Generate(1s, 0, 0) == 0);
+    CHECK(generator.Generate(1s, 3, 3) == 0);
+    CHECK(generator.Generate(1s, 5, 3) == 0);
+}
 
-SCENARIO("Loot generation") {
-    using loot_gen::LootGenerator;
-    using TimeInterval = LootGenerator::TimeInterval;
+TEST_CASE("Probability zero never produces loot", "[loot_generator]") {
+    loot_gen::LootGenerator generator{1s, 0.0};
+    CHECK(generator.Generate(1s, 0, 100) == 0);
+    CHECK(generator.Generate(100s, 0, 100) == 0);
+}
 
-    GIVEN("a loot generator") {
-        LootGenerator gen{1s, 1.0};
+TEST_CASE("Probability one fills only the shortage", "[loot_generator]") {
+    loot_gen::LootGenerator generator{1s, 1.0};
+    CHECK(generator.Generate(1s, 2, 5) == 3);
+    CHECK(generator.Generate(1s, 5, 5) == 0);
+}
 
-        constexpr TimeInterval TIME_INTERVAL = 1s;
+TEST_CASE("Time accumulates until loot is generated and then resets", "[loot_generator]") {
+    loot_gen::LootGenerator generator{1s, 0.5};
+    CHECK(generator.Generate(500ms, 0, 1) == 0);
+    CHECK(generator.Generate(500ms, 0, 1) == 1);
+    CHECK(generator.Generate(500ms, 0, 1) == 0);
+    CHECK(generator.Generate(500ms, 0, 1) == 1);
+}
 
-        WHEN("loot count is enough for every looter") {
-            THEN("no loot is generated") {
-                for (unsigned looters = 0; looters < 10; ++looters) {
-                    for (unsigned loot = looters; loot < looters + 10; ++loot) {
-                        INFO("loot count: " << loot << ", looters: " << looters);
-                        REQUIRE(gen.Generate(TIME_INTERVAL, loot, looters) == 0);
-                    }
-                }
-            }
-        }
+TEST_CASE("Long intervals use the supplied generator formula", "[loot_generator]") {
+    loot_gen::LootGenerator generator{1s, 0.5};
+    CHECK(generator.Generate(2s, 0, 8) == 6);
+}
 
-        WHEN("number of looters exceeds loot count") {
-            THEN("number of loot is proportional to loot difference") {
-                for (unsigned loot = 0; loot < 10; ++loot) {
-                    for (unsigned looters = loot; looters < loot + 10; ++looters) {
-                        INFO("loot count: " << loot << ", looters: " << looters);
-                        REQUIRE(gen.Generate(TIME_INTERVAL, loot, looters) == looters - loot);
-                    }
-                }
-            }
-        }
+TEST_CASE("Injected random multiplier is used", "[loot_generator]") {
+    SECTION("Zero multiplier") {
+        loot_gen::LootGenerator generator{1s, 1.0, [] { return 0.0; }};
+        CHECK(generator.Generate(100s, 0, 8) == 0);
     }
-
-    GIVEN("a loot generator with some probability") {
-        constexpr TimeInterval BASE_INTERVAL = 1s;
-        LootGenerator gen{BASE_INTERVAL, 0.5};
-
-        WHEN("time is greater than base interval") {
-            THEN("number of generated loot is increased") {
-                CHECK(gen.Generate(BASE_INTERVAL * 2, 0, 4) == 3);
-            }
-        }
-
-        WHEN("time is less than base interval") {
-            THEN("number of generated loot is decreased") {
-                const auto time_interval
-                    = std::chrono::duration_cast<TimeInterval>(std::chrono::duration<double>{
-                        1.0 / (std::log(1 - 0.5) / std::log(1.0 - 0.25))});
-                CHECK(gen.Generate(time_interval, 0, 4) == 1);
-            }
-        }
+    SECTION("Fractional multiplier") {
+        loot_gen::LootGenerator generator{1s, 1.0, [] { return 0.25; }};
+        CHECK(generator.Generate(1s, 0, 8) == 2);
     }
+}
 
-    GIVEN("a loot generator with custom random generator") {
-        LootGenerator gen{1s, 0.5, [] {
-                              return 0.5;
-                          }};
-        WHEN("loot is generated") {
-            THEN("number of loot is proportional to random generated values") {
-                const auto time_interval
-                    = std::chrono::duration_cast<TimeInterval>(std::chrono::duration<double>{
-                        1.0 / (std::log(1 - 0.5) / std::log(1.0 - 0.25))});
-                CHECK(gen.Generate(time_interval, 0, 4) == 0);
-                CHECK(gen.Generate(time_interval, 0, 4) == 1);
+TEST_CASE("Generated loot never exceeds shortage", "[loot_generator]") {
+    for (unsigned dogs = 0; dogs < 20; ++dogs) {
+        for (unsigned loot = 0; loot < 25; ++loot) {
+            for (double probability : {0.0, 0.1, 0.5, 1.0}) {
+                loot_gen::LootGenerator generator{1s, probability};
+                const unsigned count = generator.Generate(10s, loot, dogs);
+                CHECK(count <= (dogs > loot ? dogs - loot : 0));
             }
         }
     }

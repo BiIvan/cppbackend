@@ -92,26 +92,57 @@ namespace http_handler {
     if (target == "/api/v1/game/player/action") { return HandlePlayerActionRequest(request); }
     if (target == "/api/v1/game/tick" && !automatic_tick_) { return HandleTickRequest(request); }
     if (target == "/api/v1/maps") {
-     if (request.method() != http::verb::get && request.method() != http::verb::head) {
-      return MakeErrorResponse( http::status::bad_request, request.version(), request.keep_alive(), std::string{ BRQ}, std::string{ BRQstr});
-     }
+      if (request.method() != http::verb::get && request.method() != http::verb::head) {
+          auto response = MakeErrorResponse( http::status::method_not_allowed, request.version(), request.keep_alive(), INVAM, INVAMstr);
+          response.set(http::field::allow, "GET, HEAD");
+          return response;
+      }
       return MakeMapsResponse( request.version(), request.keep_alive());
     }
     constexpr std::string_view kMapsPrefix = "/api/v1/maps/";
     if (target.starts_with(kMapsPrefix)) {
-     if (request.method() != http::verb::get && request.method() != http::verb::head) {
-      return MakeErrorResponse( http::status::bad_request, request.version(), request.keep_alive(), std::string{ BRQ}, std::string{ BRQstr});
-     }
-      const std::string_view map_id = target.substr(kMapsPrefix.size());
-      if (map_id.empty() || map_id.find('/') != std::string_view::npos) {
-        return MakeErrorResponse( http::status::bad_request, request.version(), request.keep_alive(), std::string{ BRQ}, std::string{ BRQstr});
+      if (request.method() != http::verb::get &&
+        request.method() != http::verb::head) {
+        auto response = MakeErrorResponse(
+          http::status::method_not_allowed,
+          request.version(),
+          request.keep_alive(),
+          INVAM,
+          INVAMstr
+        );
+        response.set(http::field::allow, "GET, HEAD");
+        return response;
       }
-      const model::Map* map = game_.FindMap( model::Map::Id{std::string(map_id)});
+      const std::string_view map_id =
+        target.substr(kMapsPrefix.size());
+      if (map_id.empty() ||
+        map_id.find('/') != std::string_view::npos) {
+        return MakeErrorResponse(
+          http::status::bad_request,
+          request.version(),
+          request.keep_alive(),
+          BRQ,
+          BRQstr
+        );
+      }
+      const model::Map* map = game_.FindMap(
+        model::Map::Id{std::string{map_id}}
+      );
       if (map == nullptr) {
-        return MakeErrorResponse( http::status::not_found, request.version(), request.keep_alive(), std::string{ NOMAP}, std::string{ NOMAPstr});
+        return MakeErrorResponse(
+          http::status::not_found,
+          request.version(),
+          request.keep_alive(),
+          NOMAP,
+          NOMAPstr
+        );
       }
-      return MakeMapResponse( *map, request.version(), request.keep_alive());
-    }
+      return MakeMapResponse(
+        *map,
+        request.version(),
+        request.keep_alive()
+      );
+    }    
     return MakeErrorResponse( http::status::bad_request, request.version(), request.keep_alive(), std::string{ BRQ}, std::string{ BRQstr});
   }
 

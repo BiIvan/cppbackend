@@ -27,8 +27,19 @@ COPY CMakeLists.txt ./
 
 # Conan ставит зависимости. Если conanfile.txt не менялся — слой берётся из кэша.
 #RUN mkdir -p build && cd build && conan install .. --build=missing
-RUN mkdir -p build && cd build && conan install .. --build=missing && \
-    echo "=== Boost targets ===" && ( grep -R "add_library(Boost::" -n . || true )
+#RUN mkdir -p build && cd build && conan install .. --build=missing && \
+#    echo "=== Boost targets ===" && ( grep -R "add_library(Boost::" -n . || true )
+
+# Catch2 3.1.0 использует std::uint64_t без явного подключения <cstdint>.
+# Для сборки старой версии с GCC 13 подключаем заголовок принудительно.
+RUN mkdir -p build && cd build && \
+    conan install .. \
+        --build=missing \
+        -pr:h default \
+        -pr:b default \
+        -c 'tools.build:cxxflags=["-include", "cstdint"]' && \
+    echo "=== Boost targets ===" && \
+    (grep -R "add_library(Boost::" -n . || true)
 
 # --- Только теперь копируем исходники ---
 COPY ./src ./src/

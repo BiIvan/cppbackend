@@ -733,3 +733,7 @@ sprint3/problems/flamegraph/solution/graph.svg
 
 #Phyton environment files
 .venv-tank/*
+
+#conan 1 build
+build-conan*
+

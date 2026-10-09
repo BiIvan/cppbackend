@@ -40,3 +40,8 @@ add_executable(boost_tv_tests
 	src/controller.h
 )
 target_link_libraries(boost_tv_tests PRIVATE CONAN_PKG::boost)
+
+enable_testing()
+
+include(GoogleTest)
+gtest_discover_tests(google_tv_tests)

@@ -1,5 +1,11 @@
 #pragma once
+
+#include <string>
+#include <istream>
 #include <cassert>
+#include <ostream>
+#include <stdexcept>
+#include <string_view>
 
 #include "menu.h"
 #include "tv.h"
@@ -43,24 +49,18 @@ private:
      * Если в input содержатся какие-либо параметры, выводит сообщение об ошибке:
      * Error: the Info command does not require any arguments
      */
-    [[nodiscard]] bool ShowInfo(std::istream& input, std::ostream& output) const {
-        using namespace std::literals;
-
-        if (EnsureNoArgsInInput(INFO_COMMAND, input, output)) {
-            if (tv_.IsTurnedOn()) {
-                // Эта часть метода не реализована. Реализуйте её самостоятельно
-                assert(!"Controller::ShowInfo is not implemented when TV is turned on");
-                /*
-                Выведите две строки, завершая каждую std::endl:
-
-                TV is turned on
-                Channel number is <номер канала>
-                */
-            } else {
-                output << "TV is turned off"sv << std::endl;
-            }
+    [[nodiscard]] bool ShowInfo(std::istream& input,
+                                std::ostream& output) const {
+        if (!EnsureNoArgsInInput(INFO_COMMAND, input, output)) {
+            return true;
         }
-
+        if (tv_.IsTurnedOn()) {
+            output << "TV is turned on" << std::endl;
+            output << "Channel number is " << tv_.GetChannel().value()
+                   << std::endl;
+        } else {
+            output << "TV is turned off" << std::endl;
+        }
         return true;
     }
 
@@ -102,9 +102,22 @@ private:
      * - "Channel is out of range", если TV::SelectChannel выбросил std::out_of_range
      * - "TV is turned off", если TV::SelectChannel выбросил std::logic_error
      */
-    [[nodiscard]] bool SelectChannel(std::istream& input, std::ostream& output) const {
-        /* Реализуйте самостоятельно этот метод.*/
-        assert(!"TODO: Implement Controller::SelectChannel");
+    [[nodiscard]] bool SelectChannel(std::istream& input,
+                                     std::ostream& output) const {
+        int channel = 0;
+        std::string extra;
+        // После числа допустимы только пробельные символы.
+        if (!(input >> channel) || (input >> extra)) {
+            output << "Invalid channel" << std::endl;
+            return true;
+        }
+        try {
+            tv_.SelectChannel(channel);
+        } catch (const std::out_of_range&) {
+            output << "Channel is out of range" << std::endl;
+        } catch (const std::logic_error&) {
+            output << "TV is turned off" << std::endl;
+        }
         return true;
     }
 
@@ -113,18 +126,26 @@ private:
      * Если TV::SelectLastViewedChannel выбросил std::logic_error, выводит в output сообщение:
      * "TV is turned off"
      */
-    [[nodiscard]] bool SelectPreviousChannel(std::istream& input, std::ostream& output) const {
-        /* Реализуйте самостоятельно этот метод */
-        assert(!"TODO: Implement Controller::SelectPreviousChannel");
+    [[nodiscard]] bool SelectPreviousChannel(std::istream& input,
+                                             std::ostream& output) const {
+        if (!EnsureNoArgsInInput(SELECT_PREVIOUS_CHANNEL_COMMAND,
+                                 input, output)) {
+            return true;
+        }
+        try {
+            tv_.SelectLastViewedChannel();
+        } catch (const std::logic_error&) {
+            output << "TV is turned off" << std::endl;
+        }
         return true;
     }
 
-    [[nodiscard]] bool EnsureNoArgsInInput(std::string_view command, std::istream& input,
+    [[nodiscard]] bool EnsureNoArgsInInput(std::string_view command,
+                                           std::istream& input,
                                            std::ostream& output) const {
-        using namespace std::literals;
-        assert(input);
         if (std::string data; input >> data) {
-            output << "Error: the " << command << " command does not require any arguments"sv
+            output << "Error: the " << command
+                   << " command does not require any arguments"
                    << std::endl;
             return false;
         }

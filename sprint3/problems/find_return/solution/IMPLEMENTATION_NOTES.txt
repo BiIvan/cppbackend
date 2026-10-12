@@ -1,0 +1,18 @@
+Find and return: replacement files for sprint3/problems/find_return/solution.
+Copy archive contents into solution, preserving src/ and tests/.
+CMakeLists.txt is a complete replacement based on the supplied build file.
+The patch excludes CMakeLists.txt (its original was supplied in chat, not paste.txt).
+
+Tick order: snapshot loot and offices; move dogs and save actual endpoints;
+FindGatherEvents; process globally sorted events; erase collected loot;
+generate new loot for the next tick.
+Office collision position is GetPosition(), without visual offset.
+Provider widths are half widths: dog 0.3, office 0.25, loot 0.
+Zero capacity is accepted; malformed capacities are rejected.
+Stationary gatherers retain the existing detector behavior (ignored).
+
+Local verification: C++20 model sources compiled with g++ -Wall -Wextra -pedantic.
+Nine new model/detector test cases exercised via a minimal assert-based runner.
+Full Catch2/Boost/API/loader suite NOT run: dependencies unavailable locally.
+Run cmake build and ctest in your environment.
+Collision tests keep their own main and link Catch2::Catch2, not Catch2WithMain.

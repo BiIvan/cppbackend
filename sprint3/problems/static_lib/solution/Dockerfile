@@ -34,6 +34,7 @@ COPY CMakeLists.txt ./
 # Для сборки старой версии с GCC 13 подключаем заголовок принудительно.
 # Boost: отключаем предкомпилированные заголовки.
 # Catch2 3.1.0: компенсируем отсутствующий include <cstdint> при сборке с GCC 13.
+RUN conan inspect boost/1.79.0 -a options
 RUN mkdir -p build && cd build && \
     conan install .. \
         --build=missing \

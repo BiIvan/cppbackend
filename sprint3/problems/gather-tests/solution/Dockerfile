@@ -16,7 +16,8 @@ RUN set -eux; \
         ca-certificates \
         python3-pip \
         cmake; \
-    python3 -m pip install --no-cache-dir conan==1.53.0; \
+    python3 -m pip install --no-cache-dir conan==1.66.0; \
+    conan --version; \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

@@ -43,10 +43,12 @@ RUN mkdir -p build && cd build && \
         -s:b build_type=Release \
         -s:h compiler.cppstd=20 \
         -s:b compiler.cppstd=20 \
-        -o boost:pch=False \
-        -c 'catch2/*:tools.build:cxxflags=["-include", "cstdint"]' && \
-    echo "=== Boost targets ===" && \
-    (grep -R "add_library(Boost::" -n . || true)
+        -o 'boost/*:pch=False' \
+        -o 'boost/*:without_test=True' \
+        -o 'boost/*:without_python=True' \
+        -o 'boost/*:without_stacktrace=True' \
+        -o 'boost/*:bzip2=False' \
+        -c 'catch2/*:tools.build:cxxflags=["-include", "cstdint"]'
     
 # --- Только теперь копируем исходники ---
 COPY ./src ./src/

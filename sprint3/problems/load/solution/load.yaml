@@ -4,7 +4,7 @@ overload:
 
 phantom:
   phantom_path: /usr/local/bin/phantom
-  address: 158.160.207.137:80
+  address: 158.160.255.188:80
   ammo_type: uri
   load_profile:
     load_type: rps

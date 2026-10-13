@@ -1,23 +1,17 @@
-
 overload:
   enabled: false
 
 phantom:
-<<<<<<< HEAD
-  address: 158.160.207.137:80
-=======
-  phantom_path: /usr/local/bin/phantom
-  address: 158.160.255.188:80
->>>>>>> f50a58398b9a093060ec07fff7388c8dfa938d43
+  address: "158.160.255.188:80"
   ammo_type: uri
   load_profile:
     load_type: rps
-    schedule: line(5, 30, 1m)
+    schedule: "line(5, 30, 1m)"
   ssl: false
 
 autostop:
   autostop:
-    - http(5xx,10%,5s)
+    - "http(5xx,10%,5s)"
 
 console:
   enabled: false

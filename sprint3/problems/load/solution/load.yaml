@@ -3,7 +3,12 @@ overload:
   enabled: false
 
 phantom:
+<<<<<<< HEAD
   address: 158.160.207.137:80
+=======
+  phantom_path: /usr/local/bin/phantom
+  address: 158.160.255.188:80
+>>>>>>> f50a58398b9a093060ec07fff7388c8dfa938d43
   ammo_type: uri
   load_profile:
     load_type: rps

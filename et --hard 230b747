@@ -1,0 +1,181 @@
+[33m8cfa53b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mreview3[m[33m, [m[1;31morigin/review3[m[33m)[m Final variant 202610141848
+[33m43f420b[m Final variant
+[33m230b747[m Fix load.yaml of subproject Load 202610131343
+[33mc487e48[m Fix load.yaml of subproject Load 202610131316
+[33md5425e1[m Fix load.yaml of subproject Load 202610131316
+[33mf50a583[m Update load.yaml of subproject LOAD project's STRIM3
+[33md7fc327[m Merge branch 'review3' of github.com:BiIvan/cppbackend into review3
+[33m629db66[m Update subproject LOAD
+[33m4102736[m Update Dockerfile
+[33md34ab6f[m Update Dockerfile and conanfile.txt 2201
+[33m94c45da[m Init scoring project 2047
+[33m984f50e[m Init subproject Find_return of Sprint3 project's
+[33mc17b3ac[m Update: add geom.h tosubproject Gather project's Sprint3
+[33m4a74683[m Init subproject Gather of Sprint3 project's
+[33m8e6187b[m Update cpp-backend-tests-practicum submodule to stable main
+[33m605a71d[m update cpp-backend-tests-practicum submodule
+[33m7ac6a70[m Fix runner trouble 202610121315
+[33m76de20d[m Fix tests 1218
+[33me08dd3c[m Fix tests 1144
+[33m80dd551[m Fix tests and Dockerfile
+[33mb7aab36[m Update set of tests
+[33mfef79fe[m Init subproject Gather-tests of sprint3 project's
+[33md41facb[m Init commit of subproject GameServer with static lib of STRIM3 project's
+[33m9cdd825[m Fix tests 2241
+[33md22203d[m Fix Docerfile 2238
+[33m0b19716[m Fix Docerfile 2214
+[33mf89a453[m Fix compatible Catch2 with GCC 13
+[33m40ac16b[m Update subproject GEN_OBJECTS of STRIM3 project
+[33m4c59990[m Preinit subproject GEN-OBJECT of SPRINT3 project
+[33m471bbdb[m Update of subproject TV project's SPRINT3
+[33mdd0ea10[m Init subproject TV of project's SPRINT3
+[33ma962b55[m Subproject HTMLENCODE of SPRINT3 project's
+[33mb55e603[m Subproject URLENCODE of SPRINT3 project
+[33ma771c9d[m Update subproject 1640
+[33m1ea585b[m Update subproject 1602
+[33m65d5253[m Init commit of subproject URLDECODE project's SPRINT3
+[33m9d3ec5a[m Init commit of subproject AMMO projects SPRINT3
+[33m9d2acf6[m Fix: correct input arg_string insubproject Flamegraph of project sprint3 - 0109
+[33m8e0b56d[m Fix: correct input arg_string insubproject Flamegraph of project sprint3d
+[33mbf64e94[m Subproject Flamegraph of sprint3 project is ready
+[33m2b35396[m Init subproject Flamegraph of Sprint3
+[33m6b7d808[m Init subproject Flamegraph of Sprint3
+[33m7d1fdce[m Merge branch 'main' into review3
+[33mcb2a8ba[m Update cpp-backend-tests-practicum submodule to latest
+[33m7b88644[m Fix: fix output of v2 result
+[33m9ade9e7[m Fix: fix output of v1 result
+[33mbdf011a[m Fix: fix output of v0 result
+[33m3498ff7[m Result push of subproject Instrumentation of project Sprint3
+[33mbe02f42[m[33m ([m[1;31morigin/pr-final_task-fixed[m[33m, [m[1;32mpr-final_task-fixed[m[33m)[m Fix: fix output of v2 result
+[33ma64a485[m Fix: fix output of v1 result
+[33m010f770[m Fix: fix output of v0 result
+[33m831c4cb[m Result push of subproject Instrumentation of project Sprint3
+[33mc57bdc9[m Merge pull request #27 from BiIvan/pr-final_task-fixed
+[33m35f7753[m Change type of the const string 1927
+[33mbcc3a12[m Change type of the const string 1900
+[33m9416784[m Change type of the const string 1836
+[33m86e86bb[m Change type of the const string
+[33md6ebe85[m Tone down the stupidity a bit - 6
+[33m43cf56b[m Tone down the stupidity a bit - 5
+[33m07a7bbf[m Tone down the stupidity a bit - 4
+[33m7dc3db7[m Tone down the stupidity a bit - 3
+[33m450c882[m Tone down the stupidity a bit - 2
+[33m22974f5[m Tone down the stupidity a bit
+[33m20fcbb5[m Restore
+[33m1e3e4a5[m Add corrected command_line solution
+[33mbb4e3cd[m Merge pull request #26 from BiIvan/revert-25-pr-final_task
+[33m26b8873[m[33m ([m[1;31morigin/revert-25-pr-final_task[m[33m)[m Revert "Updated with reviewer recomendation"
+[33mabe00a2[m Merge pull request #25 from BiIvan/pr-final_task
+[33m5667158[m[33m ([m[1;31morigin/pr-final_task[m[33m)[m Update with reviewer recomendation
+[33m5e7a0a1[m Merge pull request #24 from BiIvan/pr-final_task
+[33m426dc0c[m Add final task solution
+[33m2d7e682[m ;Global merge of sprint2 without final task
+[33mdd60822[m Merge review2 into main except command_line solution
+[33m30b5d2e[m[33m ([m[1;31morigin/review2[m[33m, [m[1;32mreview2[m[33m)[m Update targets in CMAkeLISTS.txt
+[33m824562e[m Fix double defenition
+[33m21b4e8a[m Update 1901
+[33m4982728[m Subproject command_line - filling
+[33mb2a554b[m Subproject time_control init
+[33m59ec080[m Fix: corrected map constructor
+[33m332985c[m Remove duplicate dog speed getter
+[33m0d7bca1[m Fix: corrected Dockerfile in subproject join_game
+[33m90cd56f[m Update subproject time_control - change dog's speed
+[33m5f00b3b[m Update subproject time_control
+[33m335ccca[m Init subproject time_control
+[33m2012aee[m Fix: project move_players corrected definition error
+[33m0d8a199[m Update project server_logger - add '\n' to output to stream
+[33m2536bc9[m Init subproject time_control
+[33m8ceadc7[m Update 1141
+[33mb11d49e[m Update files of move_players projects
+[33m461f86f[m Update Dockerfile
+[33mb61a07b[m Fix: remove first sentense of duble and add operation of the class Dog
+[33m1cc1b25[m Fix: remove first sentense of duble
+[33me72ffa4[m Fix: update Dockerfile for condition of exit
+[33m95a68d0[m Update subprojecy move_players - 2351
+[33m6585614[m Update subprojecy move_players - add methods
+[33me8f6a1a[m Update subproject move_players - init
+[33mc4931a2[m Update project game_state - correct template variables
+[33m23a06bd[m Update project game_state - first iteration
+[33m71ca82a[m Init project game_state
+[33m78ee1d0[m Merge pull request #23 from BiIvan/review2
+[33m939d376[m Update structure
+[33m48307b0[m[33m ([m[1;32mbackup-main-before-review2[m[33m)[m ;rgb:bfbf/bfbf/bfbfrgb:0000/0000/0000 projects readiness join_game, server_logging and before there
+[33me48d2ef[m Project server_logging update
+[33m80c5640[m Project join_server update 1201
+[33m49720e8[m Project join_server update 1115
+[33m825c55e[m Project server_logging update
+[33m4eea83f[m Update
+[33mbb567f5[m Update: removing inheritance in Requesthandler class
+[33m563b7e4[m Update main.yml repair docker build network 0718
+[33mb0cab3e[m Update main.cpp of join-game project
+[33m7bf8f2f[m Update request_handler.h of join-game project for correct error output 2218
+[33m9317e2a[m Update request_handler.h of join-game project for correct error output 2210
+[33mc3d2595[m Update request_handler.h of join-game project for correct error output
+[33m0c662cb[m Update request_handler.h for correct error output
+[33mfb40db2[m Update request_handler.h for correct string operation
+[33m54989d1[m Update main.yml
+[33maffb219[m Update request_handler.h 2017
+[33md9b658c[m Update main.yml 2001 add to apt install python3.10-venv
+[33med18388[m Update main.yml 1955
+[33mbde3e41[m This reverts commit 18361058630f279224122deffdb9de2c76ccef60.
+[33m8ed262b[m Revert "Update main.yml correct dependency part of sprint1 1654"
+[33m55c612a[m Revert "Update main.yml"
+[33md8c6ef8[m Update request_handler.h from server-logging project
+[33m1836105[m Update main.yml 1607
+[33m229e24a[m Update main.yml correct dependency part of sprint1
+[33m02e8dff[m Update main.yml 1404
+[33m426a4f4[m Update main.yml 1359
+[33m3e7b0b8[m Update main.yml setup compiler version 11
+[33m1fec90a[m Update main.yml 1333
+[33me25c96d[m Update main.yml 1310
+[33mae9fc36[m Update main.yml
+[33mea4620c[m Update main.yml for conan optimization
+[33m61e4265[m Update main.yml
+[33m74fe5c5[m Update main.yml for set version CPP
+[33mc37bed3[m Import code from the previous sprint
+[33m04c06ce[m Initialization
+[33m6917e9a[m Fix: upgrade main.cpp and Dockerfile for change right directory structure
+[33m3636e00[m Fix: correct main.cpp
+[33m202bff6[m Fix: update main.cpp and request_handler.h for correct output
+[33m6400d3e[m Fix: update main.cpp for correct output
+[33m2bc7abe[m Fix: update main.cpp and logger.h for correct some more details backing up
+[33me1e4075[m Fix: update main.cpp and logger.h for correct some more details two
+[33m8042318[m Fix: update main.cpp and logger.h for correct some more details
+[33m51015b3[m Fix: update main.cpp and logger.h for correct start-string
+[33md856d12[m Fix: update main.cpp for output right start-string once more
+[33m5be6dbc[m Fix: update main.cpp for output right start-string
+[33m53740c9[m Fix: updated CMakeLists.txt and conanfile.txt
+[33m485dfa5[m Fix: updated CMakeLists.txt - next generation
+[33m08804e4[m Fix: updated CMakeLists.txt
+[33m07cce3a[m Fix: updated main.cpp
+[33m277df1c[m Fix: corrected formater
+[33mc4fc60b[m Modificated main.cpp? http_server.h? request_handler.h and cfreated logger.h
+[33m82cc51a[m Merge pull request #22 from BiIvan/review2
+[33mcc55f24[m Merge branch 'review2' of github.com:BiIvan/cppbackend into review2 Starting pull for branch review2
+[33m81855ae[m Init commit for server_logger project
+[33m35ef7b5[m Merge pull request #21 from BiIvan/review2
+[33m9cebcb9[m Merge branch 'main' into review2
+[33m2520df8[m Test for merging
+[33m06226c5[m Add cpp-backend-tests-practicum submodule to review2
+[33mfeb72bc[m Restore cpp-backend-tests-practicum submodule
+[33m518670d[m Merge branch 'review2' Try three for remove  module from review2
+[33m7b90556[m Remove cpp-backend-tests-practicum submodule from review2
+[33m65b1e21[m Merge branch 'review2' First version of second task
+[33m63142a0[m Renew module  cpp-backend-tests-practicum
+[33medb2447[m Uploading solution of task
+[33m4a8a576[m Fix: replaced  with  to flush the output buffer in main.cpp.
+[33m3d354f9[m Merge pull request #19 from BiIvan/review2
+[33meed22e3[m Sync submodule cpp-backend-tests-practicum to main
+[33mef92d1c[m modified main.cpp, http_server.h and request_handler.h for solution
+[33mf83fac6[m Add cpp-backend-tests-practicum submodule
+[33m436cdbb[m Merge pull request #18 from BiIvan/review4
+[33mdd48f62[m Merge pull request #17 from BiIvan/review3
+[33mfe4ed6c[m Merge pull request #16 from BiIvan/review2
+[33m2ed3f86[m Merge pull request #15 from BiIvan/review1
+[33m5b3d506[m Main: init cimmit
+[33ma95aadb[m[33m ([m[1;31morigin/review4[m[33m, [m[1;32mreview4[m[33m)[m Sprint4: init commit
+[33m1e21c81[m Sprint3: init commit
+[33mbfd88f4[m Sprint2: init commit
+[33m117e9bf[m[33m ([m[1;31morigin/review1[m[33m, [m[1;32mreview1[m[33m)[m Sprint1: init commit
+[33mb3348b1[m Start fresh
+[33m63624ef[m Start fresh

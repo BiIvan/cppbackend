@@ -1,0 +1,20 @@
+overload:
+  enabled: false
+
+phantom:
+  address: "185.155.19.55:8888"
+  ammo_type: uri
+  load_profile:
+    load_type: rps
+    schedule: "line(5, 30, 1m)"
+  ssl: false
+
+autostop:
+  autostop:
+    - "http(5xx,10%,5s)"
+
+console:
+  enabled: false
+
+telegraf:
+  enabled: false

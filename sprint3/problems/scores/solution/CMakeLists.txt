@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
-find_package(Boost CONFIG REQUIRED)
+find_package(Boost CONFIG REQUIRED COMPONENTS log_setup log program_options)
 find_package(Threads REQUIRED)
 add_library(game_model STATIC
     src/model.h src/model.cpp src/player.h

@@ -1,8 +1,11 @@
 #pragma once
 
+#include <chrono>
 #include <cctype>
+#include <limits>
 #include <string>
 #include <cassert>
+#include <cstdint>
 #include <utility>
 #include <variant>
 #include <iostream>
@@ -47,6 +50,7 @@ namespace http_handler {
     StringResponse HandleGameStateRequest(const StringRequest& request);
     StringResponse ReportServerError( unsigned version, bool keep_alive) const;
     StringResponse HandlePlayerActionRequest( const StringRequest& request);
+    StringResponse HandleTickRequest(const StringRequest& request);
     
     model::Game& game_;
     const extra_data::ExtraData& extra_;

@@ -19,6 +19,64 @@ namespace {
 
 namespace http_handler {
   
+  RequestHandler::StringResponse RequestHandler::HandleTickRequest(
+      const StringRequest& request) {
+    if (request.method() != http::verb::post) {
+      auto response = MakeErrorResponse(
+        http::status::method_not_allowed,
+        request.version(),
+        request.keep_alive(),
+        "invalidMethod",
+        "Only POST method is expected");
+      response.set(http::field::allow, "POST");
+      return response;
+    }
+    if (!IsJsonContentType(request)) {
+      return MakeErrorResponse(
+        http::status::bad_request,
+        request.version(),
+        request.keep_alive(),
+        "invalidArgument",
+        "Expected application/json");
+    }
+    using Rep = std::chrono::milliseconds::rep;
+    Rep delta_count = 0;
+    try {
+      const json::value body = json::parse(request.body());
+      const auto& object = body.as_object();
+      const auto& value = object.at("timeDelta");
+      std::uint64_t milliseconds = 0;
+      if (value.is_int64() && value.as_int64() >= 0) {
+        milliseconds =
+            static_cast<std::uint64_t>(value.as_int64());
+      } else if (value.is_uint64()) {
+        milliseconds = value.as_uint64();
+      } else {
+        throw std::invalid_argument(
+            "timeDelta must be a nonnegative integer");
+      }
+      if (milliseconds >
+        static_cast<std::uint64_t>(
+          std::numeric_limits<Rep>::max())) {
+        throw std::invalid_argument("timeDelta is too large");
+      }
+      delta_count = static_cast<Rep>(milliseconds);
+    } catch (const std::exception&) {
+      return MakeErrorResponse(
+        http::status::bad_request,
+        request.version(),
+        request.keep_alive(),
+        "invalidArgument",
+        "Invalid timeDelta");
+    }
+    app_.Tick(std::chrono::milliseconds{delta_count});
+    return MakeJsonResponse(
+      http::status::ok,
+      request.version(),
+      request.keep_alive(),
+      json::object{});
+  }
+  
   RequestHandler::FileRequestResult RequestHandler::HandleFileRequest(
     const StringRequest& req) const {
     if (req.method() != http::verb::get &&
@@ -147,6 +205,16 @@ namespace http_handler {
       request.target().data(),
       request.target().size()
     };
+    const auto map_method_not_allowed = [&request]() {
+      auto response = MakeErrorResponse(
+        http::status::method_not_allowed,
+        request.version(),
+        request.keep_alive(),
+        "invalidMethod",
+        "Only GET and HEAD methods are expected");
+      response.set(http::field::allow, "GET, HEAD");
+      return response;
+    };
     if (target == "/api/v1/game/join") {
       return HandleJoinGameRequest(request);
     }
@@ -159,31 +227,24 @@ namespace http_handler {
     if (target == "/api/v1/game/player/action") {
       return HandlePlayerActionRequest(request);
     }
+    if (target == "/api/v1/game/tick") {
+      return HandleTickRequest(request);
+    }    
     if (target == "/api/v1/maps") {
-     if (request.method() != http::verb::get &&
-       request.method() != http::verb::head) {
-      return MakeErrorResponse(
-       http::status::bad_request,
-       request.version(),
-       request.keep_alive(),
-       "badRequest",
-       "Bad request");
-     }
+      if (request.method() != http::verb::get &&
+        request.method() != http::verb::head) {
+        return map_method_not_allowed();
+      }
       return MakeMapsResponse(
         request.version(),
         request.keep_alive());
     }
     constexpr std::string_view kMapsPrefix = "/api/v1/maps/";
     if (target.starts_with(kMapsPrefix)) {
-     if (request.method() != http::verb::get &&
-       request.method() != http::verb::head) {
-      return MakeErrorResponse(
-       http::status::bad_request,
-       request.version(),
-       request.keep_alive(),
-       "badRequest",
-       "Bad request");
-     }
+      if (request.method() != http::verb::get &&
+          request.method() != http::verb::head) {
+        return map_method_not_allowed();
+      }
       const std::string_view map_id =
         target.substr(kMapsPrefix.size());
       if (map_id.empty() ||

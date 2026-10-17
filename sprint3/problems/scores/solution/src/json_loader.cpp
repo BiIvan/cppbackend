@@ -95,14 +95,20 @@ namespace json_loader {
       }
       map.SetLootTypesCount(static_cast<unsigned>(loot_types.size()));
       for (std::size_t i = 0; i < loot_types.size(); ++i) {
-        const auto& value = loot_types[i].as_object().at("value");
-        std::uint64_t points;
-        if (value.is_int64() && value.as_int64() >= 0) {
-          points = static_cast<std::uint64_t>(value.as_int64());
-        } else if (value.is_uint64()) {
-          points = value.as_uint64();
-        } else {
-          throw std::invalid_argument("Loot value must be a nonnegative integer");
+        const auto& type = loot_types[i].as_object();
+        const auto* value = type.if_contains("value");
+
+        std::uint64_t points = 0;
+
+        if (value != nullptr) {
+          if (value->is_int64() && value->as_int64() >= 0) {
+            points = static_cast<std::uint64_t>(value->as_int64());
+          } else if (value->is_uint64()) {
+            points = value->as_uint64();
+          } else {
+            throw std::invalid_argument(
+              "Loot value must be a nonnegative integer");
+          }
         }
         map.SetLootValue(static_cast<unsigned>(i), points);
       }

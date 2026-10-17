@@ -53,7 +53,7 @@ struct Fixture {
         }
         handler = std::make_unique<http_handler::RequestHandler>(
             game, extra, std::filesystem::current_path(),
-            boost::asio::make_strand(ioc), false, false);
+            boost::asio::make_strand(ioc));
     }
 
     std::string Join(const char* map_id) {

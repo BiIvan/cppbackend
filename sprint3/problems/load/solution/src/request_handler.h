@@ -144,7 +144,7 @@ namespace http_handler {
     static StringResponse MakeErrorResponse( http::status status, unsigned version
       , bool keep_alive, std::string_view code, std::string_view message) {
       return MakeJsonResponse( status, version, keep_alive
-        , json::object{ {COD, code}, { MSG, message}, });
+        , json::object{ {COD, code}, { JSON_KEY_MESSAGE, message}, });
     }
     
     static bool IsJsonContentType( const StringRequest& request) {

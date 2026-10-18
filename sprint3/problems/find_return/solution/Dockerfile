@@ -44,6 +44,7 @@ RUN mkdir -p build && cd build && \
         -s:h compiler.cppstd=20 \
         -s:b compiler.cppstd=20 \
         -o boost:pch=False \
+        -o 'boost/*:bzip2=False' \
         -c 'catch2/*:tools.build:cxxflags=["-include", "cstdint"]' && \
     echo "=== Boost targets ===" && \
     (grep -R "add_library(Boost::" -n . || true)

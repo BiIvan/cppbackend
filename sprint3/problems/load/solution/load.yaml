@@ -2,7 +2,7 @@ overload:
   enabled: false
 
 phantom:
-  address: "185.155.19.55:8888"
+  address: "158.160.255.188:80"
   ammo_type: uri
   load_profile:
     load_type: rps

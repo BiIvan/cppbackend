@@ -19,6 +19,7 @@
 #include "http_server.h"
 #include "json_loader.h"
 #include "request_handler.h"
+#include "model_serialization.h"
 
 namespace net = boost::asio;
 namespace json = boost::json;
@@ -36,15 +37,9 @@ namespace {
     fs::path www_root;
     std::optional<mSeconds> tick_period;
     bool randomize_spawn_points = false;
+    std::optional<fs::path> state_file;
+    std::optional<mSeconds> save_state_period;
   };
-
-  net::io_context* g_ioc = nullptr;
-
-  void HandleSignal(int) {
-    if (g_ioc != nullptr) {
-      g_ioc->stop();
-    }
-  }
 
   template <typename Fn>
   void RunWorkers(unsigned n, const Fn& fn) {
@@ -73,6 +68,10 @@ namespace {
       ("www-root,w",
         po::value<std::string>()->value_name("dir"),
         "set static files root")
+      ("state-file", po::value<std::string>()->value_name("file"),
+        "set state file path")
+      ("save-state-period", po::value<std::int64_t>()->value_name("milliseconds"),
+        "set state save period in game time")
       ("randomize-spawn-points",
         "spawn dogs at random positions");
     po::variables_map vm;
@@ -100,25 +99,38 @@ namespace {
       }
       args.tick_period = mSeconds{ms};
     }
+    if (vm.count("state-file")) {
+      const auto path = vm["state-file"].as<std::string>();
+      if (path.empty()) { throw std::invalid_argument("Empty --state-file"); }
+      args.state_file = fs::path{path};
+      if (vm.count("save-state-period")) {
+        const auto ms = vm["save-state-period"].as<std::int64_t>();
+        if (ms < 0) {
+          throw std::invalid_argument("--save-state-period must be nonnegative");
+        }
+        args.save_state_period = mSeconds{ms};
+      }
+    }
     return args;
   }
 
 }  // namespace
 
 int main(int argc, const char* argv[]) {
+  logger::InitLogger();
   try {
     const auto args = ParseArgs(argc, argv);
     if (!args) {
       return EXIT_SUCCESS;
     }
-    logger::InitLogger();
     extra_data::ExtraData extra;
     model::Game game = json_loader::LoadGame(args->config_file, extra);
     const unsigned num_threads = std::max(1u, std::thread::hardware_concurrency());
     net::io_context ioc{static_cast<int>(num_threads)};
-    g_ioc = &ioc;
-    std::signal(SIGINT, HandleSignal);
-    std::signal(SIGTERM, HandleSignal);
+    net::signal_set signals(ioc, SIGINT, SIGTERM);
+    signals.async_wait([&ioc](const boost::system::error_code& ec, int) {
+      if (!ec) { ioc.stop(); }
+    });
     auto api_strand = net::make_strand(ioc);
     http_handler::RequestHandler handler{
       game,
@@ -128,6 +140,13 @@ int main(int argc, const char* argv[]) {
       args->randomize_spawn_points,
       args->tick_period.has_value()
     };
+    if (args->state_file) {
+      serialization::StateSerializer::Load(handler.GetApplication(), *args->state_file);
+      handler.GetApplication().ConfigureSaving(
+        [&handler, path = *args->state_file] {
+          serialization::StateSerializer::Save(handler.GetApplication(), path);
+        }, args->save_state_period);
+    }
     std::shared_ptr<Ticker> ticker;
     if (args->tick_period) {
       ticker = std::make_shared<Ticker>(
@@ -147,13 +166,14 @@ int main(int argc, const char* argv[]) {
     logging::core::get()->flush();
     std::cout.flush();
     RunWorkers(num_threads, [&ioc] { ioc.run(); });
-    g_ioc = nullptr;
+    if (args->state_file) {
+      serialization::StateSerializer::Save(handler.GetApplication(), *args->state_file);
+    }
     BOOST_LOG_TRIVIAL(info)
       << logging::add_value( additional_data, json::object{ {COD, EXIT_SUCCESS}, })
       << SRVEXT;
     return EXIT_SUCCESS;
   } catch (const std::exception& ex) {
-    g_ioc = nullptr;
     BOOST_LOG_TRIVIAL(error)
       << logging::add_value( additional_data, json::object{ {COD, EXIT_FAILURE}, {EXPT, ex.what()}, })
       << SRVEXT;

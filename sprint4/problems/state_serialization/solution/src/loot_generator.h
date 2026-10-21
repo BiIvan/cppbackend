@@ -3,12 +3,15 @@
 #include <functional>
 #include <utility>
 
+namespace serialization { class StateSerializer; }
+
 namespace loot_gen {
 
 /*
  *  Генератор трофеев
  */
 class LootGenerator {
+    friend class serialization::StateSerializer;
 public:
     using RandomGenerator = std::function<double()>;
     using TimeInterval = std::chrono::milliseconds;

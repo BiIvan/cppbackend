@@ -1,10 +1,13 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <cstdint>
 #include <utility>
+#include <optional>
 #include <stdexcept>
+#include <functional>
 #include <unordered_map>
 
 #include "model.h"
@@ -16,6 +19,10 @@ using GS = model::GameSession;
 namespace app {
 
   class Application {
+    friend class serialization::StateSerializer;
+    std::function<void()> save_state_;
+    std::optional<std::chrono::milliseconds> save_period_;
+    std::chrono::milliseconds elapsed_since_save_{0};
     GS& GetOrCreateSession(const model::Map& map) {
       const std::string map_id { *map.GetId()};
       if (auto it = sessions_.find(map_id);
@@ -40,13 +47,39 @@ namespace app {
       , randomize_spawn_points_(randomize_spawn_points) {
     }
 
+    void ConfigureSaving( std::function<void()> save, std::optional<std::chrono::milliseconds> period) {
+      if (period && period->count() < 0) {
+        throw std::invalid_argument(
+            "Save period must be nonnegative");
+      }
+      save_state_ = std::move(save);
+      save_period_ = period;
+      elapsed_since_save_ = std::chrono::milliseconds{0};
+    }
+
     void Tick(std::int64_t delta_ms) {
+      using namespace std::chrono;
       if (delta_ms < 0) {
         throw std::invalid_argument("Negative tick interval");
       }
       for (auto& [map_id, session] : sessions_) {
-        session->Tick(std::chrono::milliseconds{delta_ms});
+        session->Tick(milliseconds{delta_ms});
       }
+      if (!save_state_ || !save_period_) {
+        return;
+      }
+      const milliseconds period = *save_period_;
+      const milliseconds remaining = period - elapsed_since_save_;
+      if (delta_ms < remaining.count()) {
+        elapsed_since_save_ += milliseconds{delta_ms};
+        return;
+      }
+      // Период уже достигнут. При ошибке записи следующий тик
+      // снова попытается сохранить состояние.
+      elapsed_since_save_ = period;
+      save_state_();
+      // Сбрасываем счётчик только после успешной записи.
+      elapsed_since_save_ = milliseconds{0};
     }
 
     struct JoinResult {

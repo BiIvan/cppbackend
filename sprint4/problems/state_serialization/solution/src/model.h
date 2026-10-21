@@ -1,127 +1,361 @@
 #pragma once
-#include <memory>
+
+#include <chrono>
+#include <cstdint>
+#include <cstddef>
+#include <cmath>
+#include <stdexcept>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
-#include "geom.h"
 #include "tagged.h"
 
 namespace model {
 
-using Dimension = int;
-using Coord = Dimension;
+  struct LootGeneratorConfig {
+    std::chrono::milliseconds period{5000};
+    double probability = 0.5;
+  };
 
-struct Point {
+  using Dimension = int;
+  using Coord = Dimension;
+
+  struct Point {
     Coord x, y;
-
     constexpr auto operator<=>(const Point&) const = default;
-};
+  };
 
-struct Size {
+  struct Size {
     Dimension width, height;
-};
+  };
 
-using LostObjectType = unsigned;
-using Score = unsigned;
+  using LostObjectType = unsigned;
+  using Score = unsigned;
 
-struct FoundObject {
-    using Id = util::Tagged<uint32_t, FoundObject>;
+  struct FoundObject {
+      using Id = util::Tagged<uint32_t, FoundObject>;
 
-    Id id{0u};
-    LostObjectType type{0u};
+      Id id{0u};
+      LostObjectType type{0u};
 
-    [[nodiscard]] auto operator<=>(const FoundObject&) const = default;
-};
+      [[nodiscard]] auto operator<=>(const FoundObject&) const = default;
+  };
 
-enum class Direction {
-    NORTH,
-    EAST,
-    WEST,
-    SOUTH,
-};
+  enum class Direction {
+      NORTH,
+      EAST,
+      WEST,
+      SOUTH,
+  };
 
-class Dog {
-public:
+  struct Rectangle {
+    Point position;
+    Size size;
+  };
+
+  struct Offset {
+    Dimension dx, dy;
+  };
+
+  class Road {
+    struct HorizontalTag {
+      explicit HorizontalTag() = default;
+    };
+
+    struct VerticalTag {
+      explicit VerticalTag() = default;
+    };
+
+    Point start_;
+    Point end_;
+
+  public:
+    constexpr static HorizontalTag HORIZONTAL{};
+    constexpr static VerticalTag VERTICAL{};
+
+    Road(HorizontalTag, Point start, Coord end_x) noexcept
+      : start_{start}
+      , end_{end_x, start.y} {
+    }
+
+    Road(VerticalTag, Point start, Coord end_y) noexcept
+      : start_{start}
+      , end_{start.x, end_y} {
+    }
+
+    bool IsHorizontal() const noexcept {
+      return start_.y == end_.y;
+    }
+
+    bool IsVertical() const noexcept {
+      return start_.x == end_.x;
+    }
+
+    Point GetStart() const noexcept {
+      return start_;
+    }
+
+    Point GetEnd() const noexcept {
+      return end_;
+    }
+  };
+
+  class Building {
+    Rectangle bounds_;
+
+  public:
+    explicit Building(Rectangle bounds) noexcept
+      : bounds_{bounds} {
+    }
+
+    const Rectangle& GetBounds() const noexcept {
+      return bounds_;
+    }
+  };
+
+  class Office {
+  public:
+    using Id = util::Tagged<std::string, Office>;
+
+    Office(Id id, Point position, Offset offset) noexcept
+      : id_{std::move(id)}
+      , position_{position}
+      , offset_{offset} {
+    }
+
+    const Id& GetId() const noexcept {
+      return id_;
+    }
+
+    Point GetPosition() const noexcept {
+      return position_;
+    }
+
+    Offset GetOffset() const noexcept {
+      return offset_;
+    }
+
+  private:
+    Id id_;
+    Point position_;
+    Offset offset_;
+  };
+
+
+  class Map {
+  public:
+    using Id = util::Tagged<std::string, Map>;
+    using Roads = std::vector<Road>;
+    using Buildings = std::vector<Building>;
+    using Offices = std::vector<Office>;
+
+    Map(Id id, std::string name, double dog_speed = 1.0) noexcept
+      : id_(std::move(id))
+      , name_(std::move(name))
+      , dog_speed_(dog_speed) {
+    }
+
+    const Id& GetId() const noexcept {
+      return id_;
+    }
+
+    const std::string& GetName() const noexcept {
+      return name_;
+    }
+
+    const Buildings& GetBuildings() const noexcept {
+      return buildings_;
+    }
+
+    const Roads& GetRoads() const noexcept {
+      return roads_;
+    }
+
+    const Offices& GetOffices() const noexcept {
+      return offices_;
+    }
+
+    void AddRoad(const Road& road) {
+      roads_.emplace_back(road);
+    }
+
+    void AddBuilding(const Building& building) {
+      buildings_.emplace_back(building);
+    }
+
+    double GetDogSpeed() const noexcept {
+      return dog_speed_;
+    }
+
+    void SetDogSpeed(double speed) noexcept {
+      dog_speed_ = speed;
+    }
+
+    void SetLootTypesCount(unsigned count) {
+      if (count == 0) {
+        throw std::invalid_argument("lootTypes must not be empty");
+      }
+      loot_values_.resize(count, 0);
+      loot_types_count_ = count;
+    }
+
+    unsigned GetLootTypesCount() const noexcept {
+      return loot_types_count_;
+    }
+
+    void SetBagCapacity(std::size_t capacity) noexcept {
+      bag_capacity_ = capacity;
+    }
+
+    std::size_t GetBagCapacity() const noexcept {
+      return bag_capacity_;
+    }
+
+    void SetLootValue(unsigned type, std::uint64_t value) {
+      loot_values_.at(type) = value;
+    }
+
+    std::uint64_t GetLootValue(unsigned type) const {
+      return loot_values_.at(type);
+    }
+
+    void AddOffice(Office office);
+
+  private:
+    using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
+
+    Id id_;
+    std::string name_;
+    Roads roads_;
+    Buildings buildings_;
+    double dog_speed_{ 1.0};
+    unsigned loot_types_count_ = 0;
+    std::vector<std::uint64_t> loot_values_;
+    std::size_t bag_capacity_ = 3;
+
+    OfficeIdToIndex warehouse_id_to_index_;
+    Offices offices_;
+
+  };
+
+  class Game {
+    using MapIdHasher = util::TaggedHasher<Map::Id>;
+    using MapIdToIndex = std::unordered_map<Map::Id, size_t, MapIdHasher>;
+    LootGeneratorConfig loot_generator_config_;
+    std::vector<Map> maps_;
+    MapIdToIndex map_id_to_index_;
+
+  public:
+      using Maps = std::vector<Map>;
+
+      void SetLootGeneratorConfig(LootGeneratorConfig config) {
+        if (config.period.count() <= 0 || !std::isfinite(config.probability)
+            || config.probability < 0.0 || config.probability > 1.0) {
+          throw std::invalid_argument("Invalid loot generator configuration");
+        }
+        loot_generator_config_ = config;
+      }
+
+      const LootGeneratorConfig& GetLootGeneratorConfig() const noexcept {
+        return loot_generator_config_;
+      }
+
+      void AddMap(Map map);
+
+      const Maps& GetMaps() const noexcept {
+          return maps_;
+      }
+
+      const Map* FindMap(const Map::Id& id) const noexcept {
+        auto it{ map_id_to_index_.find(id)};
+        if( it != map_id_to_index_.end()){
+          return &maps_.at(it->second);
+        }
+        return nullptr;
+      }
+  };
+
+  class Dog {
+  public:
     using Id = util::Tagged<uint32_t, Dog>;
     using BagContent = std::vector<FoundObject>;
 
     Dog(Id id, std::string name, geom::Point2D pos, size_t bag_cap)
-        : id_(std::move(id))
-        , name_(std::move(name))
-        , position_(pos)
-        , bag_cap_(bag_cap) {
-        bag_.reserve(bag_cap);
+      : id_(std::move(id))
+      , name_(std::move(name))
+      , position_(pos)
+      , bag_cap_(bag_cap) {
+      bag_.reserve(bag_cap);
     }
 
     const Id& GetId() const noexcept {
-        return id_;
+      return id_;
     }
 
     const std::string GetName() const noexcept {
-        return name_;
+      return name_;
     }
 
     const geom::Point2D& GetPosition() const noexcept {
-        return position_;
+      return position_;
     }
 
     const geom::Vec2D& GetSpeed() const noexcept {
-        return speed_;
+      return speed_;
     }
 
     void SetSpeed(geom::Vec2D speed) noexcept {
-        speed_ = speed;
+      speed_ = speed;
     }
 
     void SetPosition(geom::Point2D position) noexcept {
-        position_ = position;
+      position_ = position;
     }
 
     void SetDirection(Direction direction) noexcept {
-        direction_ = direction;
+      direction_ = direction;
     }
 
     size_t GetBagCapacity() const noexcept {
-        return bag_cap_;
+      return bag_cap_;
     }
 
     Direction GetDirection() const noexcept {
-        return direction_;
+      return direction_;
     }
 
     Score GetScore() const noexcept {
-        return score_;
+      return score_;
     }
 
     [[nodiscard]] bool PutToBag(FoundObject item) {
-        if (IsBagFull()) {
-            return false;
-        }
-
-        bag_.push_back(item);
-        return true;
+      if (IsBagFull()) {
+        return false;
+      }
+      bag_.push_back(item);
+      return true;
     }
 
     size_t EmptyBag() noexcept {
-        auto res = bag_.size();
-        bag_.clear();
-
-        return res;
+      auto res = bag_.size();
+      bag_.clear();
+      return res;
     }
 
     bool IsBagFull() const noexcept {
-        return bag_.size() >= bag_cap_;
+      return bag_.size() >= bag_cap_;
     }
 
     const BagContent& GetBagContent() const noexcept {
-        return bag_;
+      return bag_;
     }
 
     void AddScore(Score score) noexcept {
-        score_ += score;
+      score_ += score;
     }
 
-private:
+  private:
     Id id_;
     std::string name_;
     geom::Point2D position_;
@@ -130,9 +364,8 @@ private:
     std::vector<FoundObject> bag_;
     size_t bag_cap_;
     Score score_{};
-};
-
-using DogPtr = std::shared_ptr<Dog>;
-using ConstDogPtr = std::shared_ptr<const Dog>;
-
+  };
+  
+  using DogPtr = std::shared_ptr<Dog>;
+  using ConstDogPtr = std::shared_ptr<const Dog>;
 }  // namespace model

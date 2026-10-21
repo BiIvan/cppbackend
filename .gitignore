@@ -1,0 +1,7 @@
+.venv-tank/*
+logs/*
+server.log
+sprint2/*
+sprint3/*
+sprint1/*
+tank_errors.log

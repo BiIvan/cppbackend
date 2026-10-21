@@ -1,3 +1,4 @@
+
 # Created by https://www.toptal.com/developers/gitignore/api/qtcreator,clion,cmake,visualstudiocode,visualstudio,eclipse,vim,emacs,kate
 # Edit at https://www.toptal.com/developers/gitignore?templates=qtcreator,clion,cmake,visualstudiocode,visualstudio,eclipse,vim,emacs,kate
 
@@ -740,4 +741,11 @@ build-conan*
 #Conan environment
 .venv-conan1/*
 
+.venv-tank/*
+logs/*
+server.log
+sprint2/*
+sprint3/*
+sprint1/*
+tank_errors.log
 

@@ -1,17 +1,21 @@
 #pragma once
+
 #include <compare>
+#include <cstddef>
+#include <utility>
+#include <functional>
 
 namespace util {
-
+  
 /**
- * Вспомогательный шаблонный класс "Маркированный тип".
- * С его помощью можно описать строгий тип на основе другого типа.
- * Пример:
+ * Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Р№ С€Р°Р±Р»РѕРЅРЅС‹Р№ РєР»Р°СЃСЃ "РњР°СЂРєРёСЂРѕРІР°РЅРЅС‹Р№ С‚РёРї".
+ * РЎ РµРіРѕ РїРѕРјРѕС‰СЊСЋ РјРѕР¶РЅРѕ РѕРїРёСЃР°С‚СЊ СЃС‚СЂРѕРіРёР№ С‚РёРї РЅР° РѕСЃРЅРѕРІРµ РґСЂСѓРіРѕРіРѕ С‚РёРїР°.
+ * РџСЂРёРјРµСЂ:
  *
- *  struct AddressTag{}; // метка типа для строки, хранящей адрес
+ *  struct AddressTag{}; // РјРµС‚РєР° С‚РёРїР° РґР»СЏ СЃС‚СЂРѕРєРё, С…СЂР°РЅСЏС‰РµР№ Р°РґСЂРµСЃ
  *  using Address = util::Tagged<std::string, AddressTag>;
  *
- *  struct NameTag{}; // метка типа для строки, хранящей имя
+ *  struct NameTag{}; // РјРµС‚РєР° С‚РёРїР° РґР»СЏ СЃС‚СЂРѕРєРё, С…СЂР°РЅСЏС‰РµР№ РёРјСЏ
  *  using Name = util::Tagged<std::string, NameTag>;
  *
  *  struct Person {
@@ -23,44 +27,44 @@ namespace util {
  *  Address address{"4 Privet Drive, Little Whinging, Surrey, England"s};
  *
  * Person p1{name, address}; // OK
- * Person p2{address, name}; // Ошибка, Address и Name - разные типы
+ * Person p2{address, name}; // РћС€РёР±РєР°, Address Рё Name - СЂР°Р·РЅС‹Рµ С‚РёРїС‹
  */
-template <typename Value, typename Tag>
-class Tagged {
-public:
+
+  template <typename Value, typename Tag>
+  class Tagged {
+    Value value_;
+
+  public:
     using ValueType = Value;
     using TagType = Tag;
 
     explicit Tagged(Value&& v)
-        : value_(std::move(v)) {
+      : value_(std::move(v)) {
     }
+
     explicit Tagged(const Value& v)
-        : value_(v) {
+      : value_(v) {
     }
 
     const Value& operator*() const {
-        return value_;
+      return value_;
     }
 
     Value& operator*() {
-        return value_;
+      return value_;
     }
 
-    // Так в C++20 можно объявить оператор сравнения Tagged-типов
-    // Будет просто вызван соответствующий оператор для поля value_
+    // РўР°Рє РІ C++20 РјРѕР¶РЅРѕ РѕР±СЉСЏРІРёС‚СЊ РѕРїРµСЂР°С‚РѕСЂ СЃСЂР°РІРЅРµРЅРёСЏ Tagged-С‚РёРїРѕРІ
+    // Р‘СѓРґРµС‚ РїСЂРѕСЃС‚Рѕ РІС‹Р·РІР°РЅ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РёР№ РѕРїРµСЂР°С‚РѕСЂ РґР»СЏ РїРѕР»СЏ value_
     auto operator<=>(const Tagged<Value, Tag>&) const = default;
+  };
 
-private:
-    Value value_;
-};
-
-// Хешер для Tagged-типа, чтобы Tagged-объекты можно было хранить в unordered-контейнерах
-template <typename TaggedValue>
-struct TaggedHasher {
+  // РҐРµС€РµСЂ РґР»СЏ Tagged-С‚РёРїР°, С‡С‚РѕР±С‹ Tagged-РѕР±СЉРµРєС‚С‹ РјРѕР¶РЅРѕ Р±С‹Р»Рѕ С…СЂР°РЅРёС‚СЊ РІ unordered-РєРѕРЅС‚РµР№РЅРµСЂР°С…
+  template <typename TaggedValue>
+  struct TaggedHasher {
     size_t operator()(const TaggedValue& value) const {
-        // Возвращает хеш значения, хранящегося внутри value
-        return std::hash<typename TaggedValue::ValueType>{}(*value);
+      // Р’РѕР·РІСЂР°С‰Р°РµС‚ С…РµС€ Р·РЅР°С‡РµРЅРёСЏ, С…СЂР°РЅСЏС‰РµРіРѕСЃСЏ РІРЅСѓС‚СЂРё value
+      return std::hash<typename TaggedValue::ValueType>{}(*value);
     }
-};
-
+  };
 }  // namespace util

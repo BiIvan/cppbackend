@@ -1,0 +1,9 @@
+{
+    "version": 4,
+    "vendor": {
+        "conan": {}
+    },
+    "include": [
+        "F:\\Learning\\practicum\\Git\\cpp_advanced\\cpp-backend\\sprint3\\problems\\gen_objects\\solution\\build-conan1\\CMakePresets.json"
+    ]
+}

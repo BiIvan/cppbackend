@@ -1,0 +1,19 @@
+{
+  "defaultDogSpeed": 1.0,
+  "lootGeneratorConfig": {"period": 5.0, "probability": 0.5},
+  "maps": [{
+    "id": "map1", "name": "Map 1",
+    "roads": [
+      {"x0": 0, "y0": 0, "x1": 40},
+      {"x0": 40, "y0": 0, "y1": 30},
+      {"x0": 40, "y0": 30, "x1": 0},
+      {"x0": 0, "y0": 30, "y1": 0}
+    ],
+    "buildings": [{"x": 5, "y": 5, "w": 30, "h": 20}],
+    "offices": [{"id": "o0", "x": 40, "y": 30, "offsetX": 5, "offsetY": 0}],
+    "lootTypes": [
+      {"name": "key", "file": "assets/key.obj", "type": "obj", "rotation": 90, "color": "#338844", "scale": 0.03},
+      {"name": "wallet", "file": "assets/wallet.obj", "type": "obj", "rotation": 0, "color": "#883344", "scale": 0.01}
+    ]
+  }]
+}

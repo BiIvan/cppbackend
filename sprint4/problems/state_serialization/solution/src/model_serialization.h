@@ -242,7 +242,9 @@ public:
         const std::string content{std::istreambuf_iterator<char>{input},
                                   std::istreambuf_iterator<char>{}};
         if (input.bad()) { throw std::runtime_error("Cannot read saved state"); }
-        const auto value = boost::json::parse(content);
+        boost::json::parse_options options;
+        options.numbers = boost::json::number_precision::precise;
+        const auto value = boost::json::parse(content, {}, options);
         app::Application restored{app.game_, app.randomize_spawn_points_};
         Restore(restored, value.as_object());
         // The nodes and sessions keep their addresses, preserving all pointers.

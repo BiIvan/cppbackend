@@ -1,10 +1,10 @@
 #pragma once
 
-#include <chrono>
-#include <limits>
 #include <array>
 #include <cmath>
 #include <deque>
+#include <chrono>
+#include <limits>
 #include <random>
 #include <string>
 #include <vector>
@@ -18,10 +18,12 @@
 #include <unordered_map>
 
 #include "model.h"
-#include "collision_detector.h"
-#include "loot_generator.h"
 #include "tagged.h"
 #include "literals.h"
+#include "loot_generator.h"
+#include "collision_detector.h"
+
+namespace serialization { class StateSerializer; }
 
 namespace model {
 
@@ -59,6 +61,7 @@ namespace model {
   enum class Direction { NORTH, SOUTH, WEST, EAST, };
 
   class Dog {
+    friend class serialization::StateSerializer;
     DogId id_;
     std::string name_;
     Position position_;
@@ -151,10 +154,11 @@ namespace model {
   };
 
   class GameSession {
+    friend class serialization::StateSerializer;
     Position GenerateRandomPositionOnRoad() {
       const auto& roads = map_->GetRoads();
       if (roads.empty()) { throw std::logic_error(std::string{NOROADS}); }
-      std::uniform_int_distribution<size_t> road_distribution( 0, roads.size() - 1);
+      std::uniform_int_distribution<std::size_t> road_distribution( 0, roads.size() - 1);
       const Road& road = roads[road_distribution(random_generator_)];
       const Point start = road.GetStart();
       const Point end = road.GetEnd();
@@ -432,6 +436,7 @@ namespace model {
   };
 
   class Players {
+    friend class serialization::StateSerializer;
     std::uint64_t next_player_id_ = 0;
     std::unordered_map<PlayerId, Player, util::TaggedHasher<PlayerId>> players_;
 
@@ -459,6 +464,7 @@ namespace model {
   };
 
   class PlayerTokens {
+    friend class serialization::StateSerializer;
     std::string GenerateToken() {
       const std::array values{ generator_(), generator_() };
       std::ostringstream output;

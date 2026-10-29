@@ -749,3 +749,11 @@ sprint3/*
 sprint1/*
 tank_errors.log
 
+/build/
+/build-*/
+/.git/
+/test-no-state/
+/state*.json
+/src/*.before-score
+/src/*.rej
+

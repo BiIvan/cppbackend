@@ -1,0 +1,14 @@
+# ninja log v7
+30	3215	8143175505095515	CMakeFiles/game_model.dir/src/collision_detector.cpp.obj	2438bc7d559226e3
+38	4677	8143175505165336	CMakeFiles/game_model.dir/src/loot_generator.cpp.obj	39da7d7c5a204af3
+23	5281	8143175505023924	CMakeFiles/game_model.dir/src/model.cpp.obj	23839f897ef5b4bd
+5282	5812	8143175557611078	libgame_model.a	505567c22c2c2f0a
+5813	11614	8143175562920574	CMakeFiles/game_server.dir/src/json_loader.cpp.obj	536b519cde95bbb
+45	17415	8143175505245123	CMakeFiles/game_json.dir/src/boost_json.cpp.obj	cff1edfd941a61c5
+17417	17891	8143175678957724	libgame_json.a	139cc1c35669e5df
+11617	24755	8143175620963679	CMakeFiles/game_server.dir/src/request_handler.cpp.obj	774d62b4bd7f62c4
+4679	28346	8143175551452425	CMakeFiles/game_server.dir/src/http_server.cpp.obj	ed9a4779a047fcb2
+3232	79168	8143175537112955	CMakeFiles/game_server.dir/src/main.cpp.obj	78084a55e4d8bfc2
+79171	82294	8143176296502830	bin/game_server.exe	ea1d1e1fb7c02281
+297	83453	8143759613163172	CMakeFiles/game_server.dir/src/main.cpp.obj	78084a55e4d8bfc2
+83454	87457	8143760444721105	bin/game_server.exe	ea1d1e1fb7c02281

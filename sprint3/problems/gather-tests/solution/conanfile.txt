@@ -2,5 +2,8 @@
 boost/1.78.0
 catch2/3.1.0
 
+[options]
+boost:bzip2=False
+
 [generators]
 cmake_multi

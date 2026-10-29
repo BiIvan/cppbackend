@@ -134,6 +134,9 @@ namespace json_loader {
     }
     const auto default_bag_capacity = ReadBagCapacity(root, "defaultBagCapacity", 3);
     model::Game game;
+    if (const auto* value = root.if_contains("dogRetirementTime")) {
+      game.SetDogRetirementTime(json::value_to<double>(*value));
+    }
     const auto& generator = root.at("lootGeneratorConfig").as_object();
     const double period = json::value_to<double>(generator.at("period"));
     const double probability = json::value_to<double>(generator.at("probability"));

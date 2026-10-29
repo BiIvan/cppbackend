@@ -2,7 +2,10 @@
 
 #include <array>
 #include <cmath>
-#include <deque>
+#include <list>
+#include <iterator>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <chrono>
 #include <limits>
 #include <random>
@@ -69,14 +72,30 @@ namespace model {
     Direction direction_ = Direction::NORTH;
     std::vector<BagItem> bag_;
     std::uint64_t score_ = 0;
+    double play_ms_ = 0;
+    double idle_ms_ = 0;
+    bool retired_ = false;
+    std::string record_id_ = boost::uuids::to_string(boost::uuids::random_generator{}());
 
   public:
-    Dog(DogId id, std::string name, Position position) noexcept
+    Dog(DogId id, std::string name, Position position)
       : id_(id)
       , name_(std::move(name))
       , position_(position) {
     }
 
+    double GetPlayTimeMs() const noexcept { return play_ms_; }
+    bool IsRetired() const noexcept { return retired_; }
+    const std::string& GetRecordId() const noexcept { return record_id_; }
+    void AdvanceTime(double moving_ms, double total_ms, double limit_ms) noexcept {
+      if (retired_) { return; }
+      if (moving_ms > 0) { idle_ms_ = 0; }
+      const double idle_part = std::max(0.0, total_ms - moving_ms);
+      const double consumed_idle = std::min(idle_part, std::max(0.0, limit_ms - idle_ms_));
+      play_ms_ += moving_ms + consumed_idle;
+      idle_ms_ += consumed_idle;
+      if (idle_ms_ >= limit_ms) { retired_ = true; Stop(); }
+    }
     DogId GetId() const noexcept {
       return id_;
     }
@@ -113,6 +132,7 @@ namespace model {
           speed_ = {dog_speed, 0.0};
           break;
       }
+      if (speed_.x != 0 || speed_.y != 0) { idle_ms_ = 0; }
     }
 
     const std::vector<BagItem>& GetBag() const noexcept {
@@ -223,9 +243,9 @@ namespace model {
       return merged;
     }
 
-    void MoveDog(Dog& dog, double delta_seconds) const {
+    double MoveDog(Dog& dog, double delta_seconds) const {
       const Speed speed = dog.GetSpeed();
-      if (speed.x == 0.0 && speed.y == 0.0) { return; }
+      if (speed.x == 0.0 && speed.y == 0.0) { return 0; }
       const bool move_horizontal = speed.x != 0.0;
       Position position = dog.GetPosition();
       const double current = move_horizontal ? position.x : position.y;
@@ -239,12 +259,13 @@ namespace model {
         } else { position.y = actual;
         }
         dog.SetPosition(position);
-        if (actual != desired) {
+        if ((desired >= interval.to && velocity > 0) || (desired <= interval.from && velocity < 0)) {
           dog.Stop();
         }
-        return;
+        return std::min(delta_seconds, std::abs((actual - current) / velocity));
       }
       dog.Stop();
+      return 0;
     }
 
     class CollisionProvider final : public collision_detector::ItemGathererProvider {
@@ -267,7 +288,8 @@ namespace model {
       const std::size_t loot_count = lost_objects_.size();
       std::vector<bool> collected(loot_count, false);
       for (const auto& event : events) {
-        Dog& dog = dogs_.at(event.gatherer_id);
+        Dog& dog = *std::next(dogs_.begin(), event.gatherer_id);
+        if (dog.IsRetired()) { continue; }
         if (event.item_id >= loot_count) {
           dog.ReturnLoot(*map_);
         } else if (!collected[event.item_id]
@@ -292,7 +314,8 @@ namespace model {
     bool randomize_spawn_points_ = false;
     std::uint64_t next_dog_id_ = 0;
     std::mt19937 random_generator_;
-    std::deque<Dog> dogs_;
+    std::list<Dog> dogs_;
+    double retirement_ms_ = 60000.0;
     loot_gen::LootGenerator loot_generator_;
     std::uint64_t next_loot_id_ = 0;
     std::vector<LostObject> lost_objects_;
@@ -335,6 +358,10 @@ namespace model {
       }
     }
 
+    void SetRetirementTimeMs(double value) noexcept { retirement_ms_ = value; }
+    void RemoveDog(DogId id) noexcept {
+      dogs_.remove_if([id](const Dog& dog) { return dog.GetId() == id; });
+    }
     const Map& GetMap() const noexcept {
       return *map_;
     }
@@ -358,13 +385,19 @@ namespace model {
                                    static_cast<double>(position.y)}, 0.25});
       }
       provider.gatherers.reserve(dogs_.size());
+      std::vector<double> moving_times;
       for (Dog& dog : dogs_) {
         const auto start = dog.GetPosition();
-        MoveDog(dog, delta_seconds);
+        const double moving_ms = dog.IsRetired() ? 0 : MoveDog(dog, delta_seconds) * 1000.0;
+        moving_times.push_back(moving_ms);
         const auto end = dog.GetPosition();
         provider.gatherers.push_back({{start.x, start.y}, {end.x, end.y}, 0.3});
       }
       CollectAndReturnLoot(provider);
+      std::size_t timing_index = 0;
+      for (Dog& dog : dogs_) {
+        dog.AdvanceTime(moving_times[timing_index++], static_cast<double>(delta.count()), retirement_ms_);
+      }
       // Newly generated objects participate starting with the next tick.
       GenerateLoot(delta);
     }
@@ -401,7 +434,7 @@ namespace model {
       return dogs_.emplace_back(id, std::move(name), position);
     }
 
-    const std::deque<Dog>& GetDogs() const noexcept {
+    const std::list<Dog>& GetDogs() const noexcept {
       return dogs_;
     }
   };
@@ -454,6 +487,7 @@ namespace model {
       return nullptr;
     }
 
+    void Remove(PlayerId id) noexcept { players_.erase(id); }
     auto begin() const noexcept {
       return players_.begin();
     }
@@ -480,6 +514,9 @@ namespace model {
       : generator_(std::random_device{}()) {
     }
 
+    void RemovePlayer(const Player& player) noexcept {
+      std::erase_if(token_to_player_, [&player](const auto& entry) { return entry.second == &player; });
+    }
     Token AddPlayer(Player& player) {
       Token token{std::string{}};
       do {

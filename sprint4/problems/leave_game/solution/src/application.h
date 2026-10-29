@@ -20,6 +20,22 @@ namespace app {
 
   class Application {
     friend class serialization::StateSerializer;
+    std::function<void(const model::Dog&)> record_writer_;
+    void RetirePlayers() {
+      std::vector<model::PlayerId> ids;
+      for (const auto& [id, player] : players_) {
+        if (player.GetDog().IsRetired()) { ids.push_back(id); }
+      }
+      for (auto id : ids) {
+        auto* player = players_.FindById(id);
+        const auto dog_id = player->GetDog().GetId();
+        auto& session = const_cast<GS&>(player->GetSession());
+        if (record_writer_) { record_writer_(player->GetDog()); }
+        tokens_.RemovePlayer(*player);
+        players_.Remove(id);
+        session.RemoveDog(dog_id);
+      }
+    }
     std::function<void()> save_state_;
     std::optional<std::chrono::milliseconds> save_period_;
     std::chrono::milliseconds elapsed_since_save_{0};
@@ -30,6 +46,7 @@ namespace app {
         return *it->second;
       }
       auto session = std::make_unique<GS>( &map, randomize_spawn_points_, game_.GetLootGeneratorConfig());
+      session->SetRetirementTimeMs(game_.GetDogRetirementTimeMs());
       GS* result = session.get();
       sessions_.emplace(map_id, std::move(session));
       return *result;
@@ -47,6 +64,9 @@ namespace app {
       , randomize_spawn_points_(randomize_spawn_points) {
     }
 
+    void SetRecordWriter(std::function<void(const model::Dog&)> writer) {
+      record_writer_ = std::move(writer);
+    }
     void ConfigureSaving( std::function<void()> save, std::optional<std::chrono::milliseconds> period) {
       if (period && period->count() < 0) {
         throw std::invalid_argument(
@@ -65,6 +85,7 @@ namespace app {
       for (auto& [map_id, session] : sessions_) {
         session->Tick(milliseconds{delta_ms});
       }
+      RetirePlayers();
       if (!save_state_ || !save_period_) {
         return;
       }
@@ -100,7 +121,8 @@ namespace app {
     }
 
     model::Player* FindPlayerByToken( const model::Token& token) const noexcept {
-      return tokens_.FindPlayerByToken(token);
+      auto* player = tokens_.FindPlayerByToken(token);
+      return player && !player->GetDog().IsRetired() ? player : nullptr;
     }
 
     const model::Players& GetPlayers() const noexcept {

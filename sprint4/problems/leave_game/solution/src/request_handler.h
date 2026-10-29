@@ -19,6 +19,8 @@
 #include <boost/asio/dispatch.hpp>
 
 #include "model.h"
+#include "records.h"
+#include <functional>
 #include "extra_data.h"
 #include "literals.h"
 #include "application.h"
@@ -42,6 +44,7 @@ namespace http_handler {
     using FileRequestResult = std::variant< StringResponse, EmptyResponse, FileResponse>;
 
     StringResponse HandleApiRequest( const StringRequest& request);
+    StringResponse HandleRecordsRequest(const StringRequest& request);
     StringResponse HandleTickRequest(const StringRequest& request);
     StringResponse HandlePlayersRequest( const StringRequest& request);
     StringResponse HandleJoinGameRequest( const StringRequest& request);
@@ -233,6 +236,7 @@ namespace http_handler {
       return MakeJsonResponse( http::status::ok, version, keep_alive, std::move(result));
     }
 
+    const database::Records* records_ = nullptr;
     model::Game& game_;
     const extra_data::ExtraData& extra_;
     app::Application app_;
@@ -254,6 +258,12 @@ namespace http_handler {
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
+    void SetRecords(const database::Records& records) {
+      records_ = &records;
+      app_.SetRecordWriter([&records](const model::Dog& dog) {
+        records.Save(dog.GetRecordId(), {dog.GetName(), dog.GetScore(), dog.GetPlayTimeMs()});
+      });
+    }
     app::Application& GetApplication() noexcept {
       return app_;
     }

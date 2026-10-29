@@ -227,6 +227,7 @@ namespace model {
     using MapIdHasher = util::TaggedHasher<Map::Id>;
     using MapIdToIndex = std::unordered_map<Map::Id, std::size_t, MapIdHasher>;
     LootGeneratorConfig loot_generator_config_;
+    double retirement_ms_ = 60000.0;
     std::vector<Map> maps_;
     MapIdToIndex map_id_to_index_;
 
@@ -245,6 +246,13 @@ namespace model {
         return loot_generator_config_;
       }
 
+      void SetDogRetirementTime(double seconds) {
+        if (!std::isfinite(seconds) || seconds <= 0 || seconds > 1e12) {
+          throw std::invalid_argument("Invalid dogRetirementTime");
+        }
+        retirement_ms_ = seconds * 1000.0;
+      }
+      double GetDogRetirementTimeMs() const noexcept { return retirement_ms_; }
       void AddMap(Map map);
 
       const Maps& GetMaps() const noexcept {

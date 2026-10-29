@@ -9,6 +9,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 find_package(Threads REQUIRED)
+find_package(libpqxx CONFIG QUIET)
+if(TARGET libpqxx::pqxx)
+    set(GAME_PQXX_TARGET libpqxx::pqxx)
+elseif(TARGET pqxx)
+    set(GAME_PQXX_TARGET pqxx)
+else()
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(PQXX REQUIRED IMPORTED_TARGET libpqxx)
+    set(GAME_PQXX_TARGET PkgConfig::PQXX)
+endif()
 
 find_package(Boost CONFIG REQUIRED COMPONENTS
     log
@@ -48,6 +58,7 @@ add_executable(game_server
 )
 
 target_link_libraries(game_server PRIVATE
+    ${GAME_PQXX_TARGET}
     game_model
     game_json
     Boost::log
@@ -63,6 +74,7 @@ if(WIN32)
     )
 
     target_link_libraries(game_server PRIVATE
+    ${GAME_PQXX_TARGET}
         ws2_32
         mswsock
     )
@@ -76,7 +88,7 @@ if(BUILD_TESTING)
     find_package(Catch2 3 CONFIG REQUIRED)
 
     add_executable(game_server_tests
-        tests/state-serialization-tests.cpp
+        tests/retirement-tests.cpp
     )
 
     target_link_libraries(game_server_tests PRIVATE
@@ -86,8 +98,7 @@ if(BUILD_TESTING)
     )
 
     add_test(
-        NAME state_serialization
+        NAME retirement
         COMMAND game_server_tests
     )
 endif()
-

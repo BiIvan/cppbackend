@@ -81,6 +81,8 @@ class StateSerializer {
                     {"x", dog.position_.x}, {"y", dog.position_.y},
                     {"vx", dog.speed_.x}, {"vy", dog.speed_.y},
                     {"direction", static_cast<unsigned>(dog.direction_)},
+                    {"playMs", dog.play_ms_}, {"idleMs", dog.idle_ms_},
+                    {"retired", dog.retired_}, {"recordId", dog.record_id_},
                     {"score", dog.score_}, {"bag", std::move(bag)}});
             }
             Array loot;
@@ -146,6 +148,13 @@ class StateSerializer {
                 }
                 dog.direction_ = static_cast<model::Direction>(direction);
                 dog.score_ = UInt(d.at("score"));
+                if (const auto* v = d.if_contains("playMs")) { dog.play_ms_ = Number(*v); }
+                if (const auto* v = d.if_contains("idleMs")) { dog.idle_ms_ = Number(*v); }
+                if (const auto* v = d.if_contains("retired")) { dog.retired_ = v->as_bool(); }
+                if (const auto* v = d.if_contains("recordId")) { dog.record_id_ = String(*v); }
+                if (dog.play_ms_ < 0 || dog.idle_ms_ < 0 || dog.idle_ms_ > dog.play_ms_) {
+                    throw std::runtime_error("Invalid saved dog timers");
+                }
                 const auto& bag = d.at("bag").as_array();
                 if (bag.size() > map->GetBagCapacity()) { throw std::runtime_error("Saved bag is too large"); }
                 for (const auto& bv : bag) {

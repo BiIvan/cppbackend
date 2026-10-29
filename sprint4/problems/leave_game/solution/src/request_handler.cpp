@@ -1,4 +1,6 @@
 #include <cctype>
+#include <charconv>
+#include <system_error>
 #include <string>
 #include <string_view>
 
@@ -86,6 +88,9 @@ namespace http_handler {
 
   RequestHandler::StringResponse RequestHandler::HandleApiRequest( const StringRequest& request) {
     const std::string_view target{ request.target().data(), request.target().size() };
+    if (target.substr(0, target.find('?')) == "/api/v1/game/records") {
+      return HandleRecordsRequest(request);
+    }
     if (target == "/api/v1/game/join") { return HandleJoinGameRequest(request); }
     if (target == "/api/v1/game/players") { return HandlePlayersRequest(request); }
     if (target == "/api/v1/game/state") { return HandleGameStateRequest(request); }
@@ -209,7 +214,7 @@ namespace http_handler {
     const model::GameSession& current_session = current_player->GetSession();
     json::object players_json;
     for (const auto& [player_id, player] : app_.GetPlayers()) {
-      if (&player.GetSession() != &current_session) { continue; }
+      if (&player.GetSession() != &current_session || player.GetDog().IsRetired()) { continue; }
       players_json.emplace( std::to_string(*player_id), json::object{ {"name", player.GetDog().GetName()}});
     }
     StringResponse response = MakeJsonResponse( http::status::ok
@@ -248,7 +253,7 @@ namespace http_handler {
         json::object players_json;
         const auto& session = current_player.GetSession();
         for (const auto& [id, player] : app_.GetPlayers()) {
-          if (&player.GetSession() != &session) { continue; }
+          if (&player.GetSession() != &session || player.GetDog().IsRetired()) { continue; }
           const model::Dog& dog = player.GetDog();
           const auto pos = dog.GetPosition();
           const auto speed = dog.GetSpeed();
@@ -347,6 +352,65 @@ namespace http_handler {
     }
     app_.Tick(delta_ms);
     return MakeJsonResponse( http::status::ok, request.version(), request.keep_alive(), json::object{});
+  }
+
+  RequestHandler::StringResponse RequestHandler::HandleRecordsRequest(const StringRequest& request) {
+    if (request.method() != http::verb::get && request.method() != http::verb::head) {
+      auto response = MakeErrorResponse(http::status::method_not_allowed, request.version(),
+          request.keep_alive(), INVAM, INVAMstr);
+      response.set(http::field::allow, "GET, HEAD");
+      return response;
+    }
+    std::int64_t start = 0, count = 100;
+    bool have_start = false, have_count = false;
+    const std::string_view target{request.target().data(), request.target().size()};
+    try {
+      auto query_position = target.find('?');
+      if (query_position != std::string_view::npos) {
+        auto query = target.substr(query_position + 1);
+        while (!query.empty()) {
+          const auto separator = query.find('&');
+          const auto part = query.substr(0, separator);
+          const auto equals = part.find('=');
+          if (equals == std::string_view::npos) { throw std::invalid_argument("Missing value"); }
+          auto key = UrlDecode(beast::string_view{part.data(), equals});
+          auto encoded_value = part.substr(equals + 1);
+          auto value = UrlDecode(beast::string_view{encoded_value.data(), encoded_value.size()});
+          if (!key || !value) { throw std::invalid_argument("Invalid encoding"); }
+          if (*key == "start" || *key == "maxItems") {
+            std::int64_t number = 0;
+            if (value->empty() || value->front() < '0' || value->front() > '9') {
+              throw std::invalid_argument("Expected nonnegative integer");
+            }
+            const auto [end, ec] = std::from_chars(value->data(), value->data() + value->size(), number);
+            if (ec != std::errc{} || end != value->data() + value->size() || number < 0) {
+              throw std::invalid_argument("Invalid integer");
+            }
+            if (*key == "start") {
+              if (have_start) { throw std::invalid_argument("Duplicate start"); }
+              have_start = true; start = number;
+            } else {
+              if (have_count || number > 100) { throw std::invalid_argument("Invalid maxItems"); }
+              have_count = true; count = number;
+            }
+          }
+          if (separator == std::string_view::npos) { break; }
+          query.remove_prefix(separator + 1);
+        }
+      }
+    } catch (const std::invalid_argument&) {
+      return MakeErrorResponse(http::status::bad_request, request.version(),
+          request.keep_alive(), INVARG, "Invalid records query parameters");
+    }
+    if (!records_) { throw std::runtime_error("Records repository is not configured"); }
+    json::array result;
+    for (const auto& record : records_->Read(start, count)) {
+      result.emplace_back(json::object{{"name", record.name}, {"score", record.score},
+          {"playTime", record.play_ms / 1000.0}});
+    }
+    auto response = MakeJsonResponse(http::status::ok, request.version(), request.keep_alive(), std::move(result));
+    if (request.method() == http::verb::head) { response.body().clear(); }
+    return response;
   }
 
 } // namespace http_handler

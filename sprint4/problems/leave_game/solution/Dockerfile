@@ -6,6 +6,8 @@ RUN apt-get update \
         cmake \
         ninja-build \
         libboost-all-dev \
+        libpqxx-dev \
+        pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src

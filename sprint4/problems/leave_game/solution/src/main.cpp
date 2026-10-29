@@ -123,6 +123,9 @@ int main(int argc, const char* argv[]) {
     if (!args) {
       return EXIT_SUCCESS;
     }
+    const char* db_url = std::getenv("GAME_DB_URL");
+    if (!db_url || !*db_url) { throw std::runtime_error("GAME_DB_URL is required"); }
+    database::Records records{db_url};
     extra_data::ExtraData extra;
     model::Game game = json_loader::LoadGame(args->config_file, extra);
     const unsigned num_threads = std::max(1u, std::thread::hardware_concurrency());
@@ -140,6 +143,7 @@ int main(int argc, const char* argv[]) {
       args->randomize_spawn_points,
       args->tick_period.has_value()
     };
+    handler.SetRecords(records);
     if (args->state_file) {
       serialization::StateSerializer::Load(handler.GetApplication(), *args->state_file);
       handler.GetApplication().ConfigureSaving(

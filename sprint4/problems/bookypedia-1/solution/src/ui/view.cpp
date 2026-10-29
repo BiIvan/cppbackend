@@ -80,7 +80,7 @@ namespace ui {
   }
 
   bool View::ShowAuthors() const {
-    PrintVector(output_, GetAuthors(), ". ");
+    PrintVector(output_, GetAuthors(), " ");
     return true;
   }
 

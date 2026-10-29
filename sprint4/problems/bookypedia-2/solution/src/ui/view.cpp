@@ -7,6 +7,11 @@
 #include <cctype>
 namespace ui {
 namespace {
+struct BookNotFound final : std::runtime_error {
+    BookNotFound()
+        : std::runtime_error("Book not found") {
+    }
+};
 std::string Trim(std::string value) {
     const auto first = value.find_first_not_of(" \t\r\n\f\v");
     if (first == std::string::npos) { return {}; }
@@ -104,7 +109,7 @@ std::optional<app::BookInfo> View::SelectBook(const std::string& title) const {
     auto books = use_cases_.GetBooks();
     if (!title.empty()) {
         std::erase_if(books, [&title](const auto& book) { return book.title != title; });
-        if (books.empty()) { throw std::runtime_error("Book not found"); }
+        if (books.empty()) {     throw BookNotFound{}; }
         if (books.size() == 1) { return books.front(); }
     }
     PrintBooks(books);
@@ -130,8 +135,7 @@ bool View::AddBook(std::istream& in) const {
         std::optional<app::AuthorInfo> author;
         bool create_author = false;
         if (name.empty()) {
-            author = SelectAuthor({}, true);
-            if (!author) { throw std::runtime_error("Cancelled"); }
+          author = SelectAuthor({}, true);
         } else {
             const auto authors = use_cases_.GetAuthors();
             for (const auto& item : authors) { if (item.name == name) { author = item; break; } }
@@ -144,6 +148,9 @@ bool View::AddBook(std::istream& in) const {
         }
         output_ << "Enter tags (comma separated):" << std::endl;
         const auto tags = app::NormalizeTags(ReadLine());
+        if (!create_author && !author) {
+          throw std::runtime_error("Cancelled");
+        }
         if (create_author) { use_cases_.AddBookWithNewAuthor(name, title, year, tags); }
         else { use_cases_.AddBookWithTags(author->id, title, year, tags); }
     } catch (const std::exception&) { output_ << "Failed to add book" << std::endl; }
@@ -186,29 +193,37 @@ bool View::ShowBook(std::istream& in) const {
 bool View::DeleteBook(std::istream& in) const {
     try {
         auto book = SelectBook(Tail(in));
-        if (book && !use_cases_.DeleteBook(book->id)) { throw std::runtime_error("Deleted"); }
-    } catch (const std::exception&) { output_ << "Failed to delete book" << std::endl; }
+        if (!book) { return true; }
+        if (!use_cases_.DeleteBook(book->id)) { throw BookNotFound{}; }
+    } catch (const BookNotFound&) {
+        output_ << "Book not found" << std::endl;
+    } catch (const std::exception&) {
+        output_ << "Failed to delete book" << std::endl;
+    }
     return true;
 }
-bool View::EditBook(std::istream& in) const {
+  bool View::EditBook(std::istream& in) const {
     try {
-        auto selected = SelectBook(Tail(in));
-        if (!selected) { return true; }
-        auto book = use_cases_.FindBook(selected->id);
-        if (!book) { throw std::runtime_error("Deleted"); }
-        output_ << "Enter new title or empty line to use the current one (" << book->title << "):" << std::endl;
-        auto title_line = ReadLine();
-        std::optional<std::string> title;
-        if (!title_line.empty()) { title = std::move(title_line); }
-        output_ << "Enter publication year or empty line to use the current one ("
-                << book->publication_year << "):" << std::endl;
-        const auto year_line = ReadLine();
-        std::optional<int> year;
-        if (!year_line.empty()) { year = ParseYear(year_line); }
-        output_ << "Enter tags (current tags: " << JoinTags(book->tags) << "):" << std::endl;
-        const auto tags = app::NormalizeTags(ReadLine());
-        if (!use_cases_.EditBook(book->id, title, year, tags)) { throw std::runtime_error("Deleted"); }
+      auto selected = SelectBook(Tail(in));
+      if (!selected) { 
+        output_ << "Book not found" << std::endl;
+        return true; 
+      }
+      auto book = use_cases_.FindBook(selected->id);
+      if (!book) { throw std::runtime_error("Deleted"); }
+      output_ << "Enter new title or empty line to use the current one (" << book->title << "):" << std::endl;
+      auto title_line = ReadLine();
+      std::optional<std::string> title;
+      if (!title_line.empty()) { title = std::move(title_line); }
+      output_ << "Enter publication year or empty line to use the current one ("
+              << book->publication_year << "):" << std::endl;
+      const auto year_line = ReadLine();
+      std::optional<int> year;
+      if (!year_line.empty()) { year = ParseYear(year_line); }
+      output_ << "Enter tags (current tags: " << JoinTags(book->tags) << "):" << std::endl;
+      const auto tags = app::NormalizeTags(ReadLine());
+      if (!use_cases_.EditBook(book->id, title, year, tags)) { throw std::runtime_error("Deleted"); }
     } catch (const std::exception&) { output_ << "Book not found" << std::endl; }
     return true;
-}
+  }
 }

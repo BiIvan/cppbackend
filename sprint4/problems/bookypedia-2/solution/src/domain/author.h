@@ -18,7 +18,7 @@ namespace domain {
   class Author {
     AuthorId id_;
     std::string name_;
-    
+
   public:
     Author(AuthorId id, std::string name)
       : id_(std::move(id))
@@ -44,6 +44,12 @@ namespace domain {
       throw std::logic_error("AuthorRepository::GetAll is not implemented");
     }
 
+    virtual bool Delete(const AuthorId&) {
+      throw std::logic_error("Delete not implemented");
+    }
+    virtual bool Edit(const AuthorId&, const std::string&) {
+      throw std::logic_error("Edit not implemented");
+    }
   protected:
     ~AuthorRepository() = default;
   };

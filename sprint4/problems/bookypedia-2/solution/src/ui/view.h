@@ -1,67 +1,33 @@
 #pragma once
-
 #include <iosfwd>
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
-
-namespace menu {
-  class Menu;
-}
-
-namespace app {
-  class UseCases;
-}
-
+#include "../app/use_cases.h"
+namespace menu { class Menu; }
 namespace ui {
-  namespace detail {
-
-    struct AddBookParams {
-      std::string title;
-      std::string author_id;
-      int publication_year = 0;
-    };
-
-    struct AuthorInfo { 
-      std::string id;
-      std::string name;
-    };
-
-    struct BookInfo {
-      std::string title;
-      int publication_year;
-    };
-
-  }  // namespace detail
-
-  class View {
-    bool AddAuthor(std::istream& cmd_input) const;
-    bool AddBook(std::istream& cmd_input) const;
-    bool ShowAuthors() const;
-    bool ShowBooks() const;
-    bool ShowAuthorBooks() const;
-
-    std::optional<detail::AddBookParams> GetBookParams(
-        std::istream& cmd_input) const;
-
-    std::optional<std::string> SelectAuthor() const;
-
-    std::vector<detail::AuthorInfo> GetAuthors() const;
-    std::vector<detail::BookInfo> GetBooks() const;
-
-    std::vector<detail::BookInfo> GetAuthorBooks(
-        const std::string& author_id) const;
-
+class View {
     menu::Menu& menu_;
     app::UseCases& use_cases_;
     std::istream& input_;
     std::ostream& output_;
-    
-  public:
-    View(menu::Menu& menu,
-         app::UseCases& use_cases,
-         std::istream& input,
-         std::ostream& output);
-  };
-
-}  // namespace ui
+    bool AddAuthor(std::istream&) const;
+    bool AddBook(std::istream&) const;
+    bool ShowAuthors() const;
+    bool ShowBooks() const;
+    bool ShowAuthorBooks() const;
+    bool DeleteAuthor(std::istream&) const;
+    bool EditAuthor(std::istream&) const;
+    bool ShowBook(std::istream&) const;
+    bool DeleteBook(std::istream&) const;
+    bool EditBook(std::istream&) const;
+    std::optional<app::AuthorInfo> SelectAuthor(const std::string& name, bool header) const;
+    std::optional<app::BookInfo> SelectBook(const std::string& title) const;
+    void PrintAuthors(const std::vector<app::AuthorInfo>&) const;
+    void PrintBooks(const std::vector<app::BookInfo>&, bool with_author = true) const;
+    void PrintBook(const app::BookInfo&) const;
+    std::string ReadLine() const;
+public:
+    View(menu::Menu&, app::UseCases&, std::istream&, std::ostream&);
+};
+}

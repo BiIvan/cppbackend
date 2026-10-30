@@ -1,56 +1,36 @@
 #pragma once
-
 #include <pqxx/pqxx>
-
 #include "../domain/book.h"
-#include "../domain/author.h"
-
 namespace postgres {
-
-  class AuthorRepositoryImpl : public domain::AuthorRepository {
+class AuthorRepositoryImpl : public domain::AuthorRepository {
     pqxx::connection& connection_;
-    
-  public:
-    explicit AuthorRepositoryImpl(pqxx::connection& connection)
-      : connection_{connection} {
-    }
-
-    void Save(const domain::Author& author) override;
-
+public:
+    explicit AuthorRepositoryImpl(pqxx::connection& c) : connection_(c) {}
+    void Save(const domain::Author&) override;
     std::vector<domain::Author> GetAll() override;
-  };
-
-  class BookRepositoryImpl : public domain::BookRepository {
+    bool Delete(const domain::AuthorId&) override;
+    bool Edit(const domain::AuthorId&, const std::string&) override;
+};
+class BookRepositoryImpl : public domain::BookRepository {
     pqxx::connection& connection_;
-    
-  public:
-    explicit BookRepositoryImpl(pqxx::connection& connection)
-        : connection_{connection} {
-    }
-
-    void Save(const domain::Book& book) override;
-
+public:
+    explicit BookRepositoryImpl(pqxx::connection& c) : connection_(c) {}
+    void Save(const domain::Book&) override;
+    void SaveWithAuthor(const domain::Book&, const domain::Author&) override;
     std::vector<domain::Book> GetAll() override;
-
-    std::vector<domain::Book> GetByAuthor(
-        const domain::AuthorId& author_id) override;
-  };
-
-  class Database {
+    std::vector<domain::Book> GetByAuthor(const domain::AuthorId&) override;
+    std::optional<domain::Book> Find(const domain::BookId&) override;
+    bool Delete(const domain::BookId&) override;
+    bool Edit(const domain::BookId&, const std::optional<std::string>&,
+              const std::optional<int>&, const std::vector<std::string>&) override;
+};
+class Database {
     pqxx::connection connection_;
     AuthorRepositoryImpl authors_{connection_};
     BookRepositoryImpl books_{connection_};
-    
-  public:
+public:
     explicit Database(pqxx::connection connection);
-
-    AuthorRepositoryImpl& GetAuthors() & {
-      return authors_;
-    }
-
-    BookRepositoryImpl& GetBooks() & {
-      return books_;
-    }
-  };
-
-}  // namespace postgres
+    AuthorRepositoryImpl& GetAuthors() & { return authors_; }
+    BookRepositoryImpl& GetBooks() & { return books_; }
+};
+}

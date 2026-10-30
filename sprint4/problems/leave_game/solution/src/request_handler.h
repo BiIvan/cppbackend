@@ -1,5 +1,5 @@
 #pragma once
-
+//2026.10.30 13:08
 #include <cctype>
 #include <string>
 #include <cassert>
@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <exception>
 #include <filesystem>
+#include <functional>
 #include <string_view>
 #include <boost/json.hpp>
 #include <boost/asio/post.hpp>
@@ -20,9 +21,8 @@
 
 #include "model.h"
 #include "records.h"
-#include <functional>
-#include "extra_data.h"
 #include "literals.h"
+#include "extra_data.h"
 #include "application.h"
 
 namespace http_handler {
@@ -76,7 +76,7 @@ namespace http_handler {
       if (extension == ".xml") { return "application/xml"; }
       if (extension == ".png") { return "image/png"; }
       if (extension == ".jpg" || extension == ".jpeg" ||
-          extension == ".jpe") { return "image/jpeg"; }
+        extension == ".jpe") { return "image/jpeg"; }
       if (extension == ".gif") { return "image/gif"; }
       if (extension == ".bmp") { return "image/bmp"; }
       if (extension == ".ico") { return "image/vnd.microsoft.icon"; }
@@ -109,9 +109,8 @@ namespace http_handler {
         if (high < 0 || low < 0) {
           return std::nullopt;
         }
-        decoded.push_back(
-          static_cast<char>((high << 4) | low));
-          i += 2;
+        decoded.push_back( static_cast<char>((high << 4) | low));
+        i += 2;
       }
       return decoded;
     }
@@ -121,7 +120,7 @@ namespace http_handler {
       const fs::path normalized_base = fs::weakly_canonical(base);
       auto path_it = normalized_path.begin();
       for (auto base_it{ normalized_base.begin()}; base_it != normalized_base.end(); ++base_it, ++path_it) {
-          if (path_it == normalized_path.end() || *path_it != *base_it) { return false; }
+        if (path_it == normalized_path.end() || *path_it != *base_it) { return false; }
       }
       return true;
     }
@@ -179,53 +178,51 @@ namespace http_handler {
       const model::Point start = road.GetStart();
       const model::Point end = road.GetEnd();
       if (road.IsHorizontal()) {
-          return { {X0, start.x}, {Y0, start.y}, {X1, end.x}, };
+        return { {X0, start.x}, {Y0, start.y}, {X1, end.x}, };
       }
       return { {X0, start.x}, {Y0, start.y}, {Y1, end.y}, };
     }
 
-    static json::object SerializeBuilding(
-      const model::Building& building) {
+    static json::object SerializeBuilding( const model::Building& building) {
       const model::Rectangle& bounds = building.GetBounds();
       return {
-          {X, bounds.position.x}, {Y, bounds.position.y},
-          {W, bounds.size.width}, {H, bounds.size.height},};
+        {X, bounds.position.x}, {Y, bounds.position.y},
+        {W, bounds.size.width}, {H, bounds.size.height},};
     }
 
-    static json::object SerializeOffice(
-      const model::Office& office) {
+    static json::object SerializeOffice( const model::Office& office) {
       const model::Point position = office.GetPosition();
       const model::Offset offset = office.GetOffset();
       return { {ID, *office.GetId()},
-          {X, position.x}, {Y, position.y},
-          {OffX, offset.dx}, {OffY, offset.dy},};
+        {X, position.x}, {Y, position.y},
+        {OffX, offset.dx}, {OffY, offset.dy},};
     }
 
     static json::object SerializeMap(const model::Map& map) {
       json::array roads;
       roads.reserve(map.GetRoads().size());
       for (const model::Road& road : map.GetRoads()) {
-          roads.emplace_back(SerializeRoad(road));
+        roads.emplace_back(SerializeRoad(road));
       }
       json::array buildings;
       buildings.reserve(map.GetBuildings().size());
       for (const model::Building& building : map.GetBuildings()) {
-          buildings.emplace_back(SerializeBuilding(building));
+        buildings.emplace_back(SerializeBuilding(building));
       }
       json::array offices;
       offices.reserve(map.GetOffices().size());
       for (const model::Office& office : map.GetOffices()) {
-          offices.emplace_back(SerializeOffice(office));
+        offices.emplace_back(SerializeOffice(office));
       }
       return { {ID, *map.GetId()}, {NAME, map.GetName()}, {ROAD, std::move(roads)},
-          {BUILD, std::move(buildings)}, {OFFICE, std::move(offices)},};
+        {BUILD, std::move(buildings)}, {OFFICE, std::move(offices)},};
     }
 
     StringResponse MakeMapsResponse( unsigned version, bool keep_alive) const {
       json::array maps;
       maps.reserve(game_.GetMaps().size());
       for (const model::Map& map : game_.GetMaps()) {
-          maps.emplace_back(json::object{ {ID, *map.GetId()}, {NAME, map.GetName()},});
+        maps.emplace_back(json::object{ {ID, *map.GetId()}, {NAME, map.GetName()},});
       }
       return MakeJsonResponse( http::status::ok, version, keep_alive, std::move(maps));
     }
@@ -264,6 +261,7 @@ namespace http_handler {
         records.Save(dog.GetRecordId(), {dog.GetName(), dog.GetScore(), dog.GetPlayTimeMs()});
       });
     }
+    
     app::Application& GetApplication() noexcept {
       return app_;
     }

@@ -1,5 +1,5 @@
 #pragma once
-
+//2026.10.30 13:52
 
 #include <cmath>
 #include <chrono>
@@ -23,6 +23,7 @@ namespace model {
 
   using Dimension = int;
   using Coord = Dimension;
+  using Id = util::Tagged<std::string, Office>;
 
   struct Point {
     Coord x, y;
@@ -99,8 +100,11 @@ namespace model {
   };
 
   class Office {
+    Id id_;
+    Point position_;
+    Offset offset_;
+    
   public:
-    using Id = util::Tagged<std::string, Office>;
 
     Office(Id id, Point position, Offset offset) noexcept
       : id_{std::move(id)}
@@ -119,11 +123,6 @@ namespace model {
     Offset GetOffset() const noexcept {
       return offset_;
     }
-
-  private:
-    Id id_;
-    Point position_;
-    Offset offset_;
   };
 
 
@@ -220,7 +219,6 @@ namespace model {
 
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
-
   };
 
   class Game {
@@ -232,40 +230,41 @@ namespace model {
     MapIdToIndex map_id_to_index_;
 
   public:
-      using Maps = std::vector<Map>;
+    using Maps = std::vector<Map>;
 
-      void SetLootGeneratorConfig(LootGeneratorConfig config) {
-        if (config.period.count() <= 0 || !std::isfinite(config.probability)
-            || config.probability < 0.0 || config.probability > 1.0) {
-          throw std::invalid_argument("Invalid loot generator configuration");
-        }
-        loot_generator_config_ = config;
+    void SetLootGeneratorConfig(LootGeneratorConfig config) {
+      if (config.period.count() <= 0 || !std::isfinite(config.probability)
+        || config.probability < 0.0 || config.probability > 1.0) {
+        throw std::invalid_argument("Invalid loot generator configuration");
       }
+      loot_generator_config_ = config;
+    }
 
-      const LootGeneratorConfig& GetLootGeneratorConfig() const noexcept {
-        return loot_generator_config_;
-      }
+    const LootGeneratorConfig& GetLootGeneratorConfig() const noexcept {
+      return loot_generator_config_;
+    }
 
-      void SetDogRetirementTime(double seconds) {
-        if (!std::isfinite(seconds) || seconds <= 0 || seconds > 1e12) {
-          throw std::invalid_argument("Invalid dogRetirementTime");
-        }
-        retirement_ms_ = seconds * 1000.0;
+    void SetDogRetirementTime(double seconds) {
+      if (!std::isfinite(seconds) || seconds <= 0 || seconds > 1e12) {
+        throw std::invalid_argument("Invalid dogRetirementTime");
       }
-      double GetDogRetirementTimeMs() const noexcept { return retirement_ms_; }
-      void AddMap(Map map);
+      retirement_ms_ = seconds * 1000.0;
+    }
+    
+    double GetDogRetirementTimeMs() const noexcept { return retirement_ms_; }
+    
+    void AddMap(Map map);
 
-      const Maps& GetMaps() const noexcept {
-          return maps_;
-      }
+    const Maps& GetMaps() const noexcept {
+      return maps_;
+    }
 
-      const Map* FindMap(const Map::Id& id) const noexcept {
-        auto it{ map_id_to_index_.find(id)};
-        if( it != map_id_to_index_.end()){
-          return &maps_.at(it->second);
-        }
-        return nullptr;
+    const Map* FindMap(const Map::Id& id) const noexcept {
+      auto it{ map_id_to_index_.find(id)};
+      if( it != map_id_to_index_.end()){
+        return &maps_.at(it->second);
       }
+      return nullptr;
+    }
   };
-
 }  // namespace model

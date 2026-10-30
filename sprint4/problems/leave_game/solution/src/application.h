@@ -1,4 +1,5 @@
 #pragma once
+//2026.10.30 13:46
 
 #include <chrono>
 #include <memory>
@@ -95,11 +96,8 @@ namespace app {
         elapsed_since_save_ += milliseconds{delta_ms};
         return;
       }
-      // Период уже достигнут. При ошибке записи следующий тик
-      // снова попытается сохранить состояние.
       elapsed_since_save_ = period;
       save_state_();
-      // Сбрасываем счётчик только после успешной записи.
       elapsed_since_save_ = milliseconds{0};
     }
 
@@ -129,5 +127,4 @@ namespace app {
       return players_;
     }
   };
-
 }  // namespace app

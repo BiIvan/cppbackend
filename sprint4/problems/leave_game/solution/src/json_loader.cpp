@@ -1,3 +1,5 @@
+//2026.10.30 13:48
+
 #include <cmath>
 #include <limits>
 #include <string>
@@ -116,7 +118,6 @@ namespace json_loader {
       }
       return map;
     }
-
   }  // namespace
 
   model::Game LoadGame(const std::filesystem::path& json_path, extra_data::ExtraData& extra) {
@@ -154,5 +155,4 @@ namespace json_loader {
     extra = std::move(loaded_extra);
     return game;
   }
-
 }  // namespace json_loader

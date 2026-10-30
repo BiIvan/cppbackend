@@ -1,8 +1,9 @@
+//2026.10.30 12:57
 #include <cctype>
-#include <charconv>
-#include <system_error>
 #include <string>
+#include <charconv>
 #include <string_view>
+#include <system_error>
 
 #include "literals.h"
 #include "request_handler.h"
@@ -98,9 +99,9 @@ namespace http_handler {
     if (target == "/api/v1/game/tick" && !automatic_tick_) { return HandleTickRequest(request); }
     if (target == "/api/v1/maps") {
       if (request.method() != http::verb::get && request.method() != http::verb::head) {
-          auto response = MakeErrorResponse( http::status::method_not_allowed, request.version(), request.keep_alive(), INVAM, INVAMstr);
-          response.set(http::field::allow, "GET, HEAD");
-          return response;
+        auto response = MakeErrorResponse( http::status::method_not_allowed, request.version(), request.keep_alive(), INVAM, INVAMstr);
+        response.set(http::field::allow, "GET, HEAD");
+        return response;
       }
       return MakeMapsResponse( request.version(), request.keep_alive());
     }
@@ -151,8 +152,7 @@ namespace http_handler {
     return MakeErrorResponse( http::status::bad_request, request.version(), request.keep_alive(), std::string{ BRQ}, std::string{ BRQstr});
   }
 
-  RequestHandler::StringResponse RequestHandler::HandleJoinGameRequest(
-    const StringRequest& request) {
+  RequestHandler::StringResponse RequestHandler::HandleJoinGameRequest( const StringRequest& request) {
     if (request.method() != http::verb::post) {
       auto response = MakeErrorResponse( http::status::method_not_allowed, request.version(), request.keep_alive(), std::string{ INVAM}, std::string{ ONLYPOST});
       response.set(http::field::allow, "POST");
@@ -182,8 +182,7 @@ namespace http_handler {
     }
   }
 
-  std::optional<model::Token> RequestHandler::ExtractBearerToken(
-    const StringRequest& request) {
+  std::optional<model::Token> RequestHandler::ExtractBearerToken( const StringRequest& request) {
     constexpr std::string_view kBearerPrefix{ "Bearer "};
     const auto authorization = request[http::field::authorization];
     const std::string_view value{ authorization.data(), authorization.size() };
@@ -237,7 +236,6 @@ namespace http_handler {
       }
       return "U";
   }
-
 }  // namespace
 
   RequestHandler::StringResponse RequestHandler::HandleGameStateRequest(
@@ -274,8 +272,8 @@ namespace http_handler {
         json::object lost_objects_json;
         for (const auto& object : session.GetLostObjects()) {
           lost_objects_json.emplace(std::to_string(object.id), json::object{
-              {"type", object.type},
-              {POS, json::array{object.position.x, object.position.y}}
+            {"type", object.type},
+            {POS, json::array{object.position.x, object.position.y}}
           });
         }
         auto response = MakeJsonResponse( http::status::ok, request.version(), request.keep_alive()
@@ -341,11 +339,11 @@ namespace http_handler {
       const json::object& object = body.as_object();
       const json::value& delta = object.at(TD);
       if (!delta.is_int64()) {
-          throw std::invalid_argument(std::string{ InvTD});
+        throw std::invalid_argument(std::string{ InvTD});
       }
       delta_ms = delta.as_int64();
       if (delta_ms < 0) {
-          throw std::invalid_argument(std::string{ NegTD});
+        throw std::invalid_argument(std::string{ NegTD});
       }
     } catch (const std::exception&) {
       return MakeErrorResponse( http::status::bad_request, request.version(), request.keep_alive(), std::string{ INVARG}, std::string{ FailedPARSE});
@@ -357,7 +355,7 @@ namespace http_handler {
   RequestHandler::StringResponse RequestHandler::HandleRecordsRequest(const StringRequest& request) {
     if (request.method() != http::verb::get && request.method() != http::verb::head) {
       auto response = MakeErrorResponse(http::status::method_not_allowed, request.version(),
-          request.keep_alive(), INVAM, INVAMstr);
+        request.keep_alive(), INVAM, INVAMstr);
       response.set(http::field::allow, "GET, HEAD");
       return response;
     }
@@ -400,17 +398,16 @@ namespace http_handler {
       }
     } catch (const std::invalid_argument&) {
       return MakeErrorResponse(http::status::bad_request, request.version(),
-          request.keep_alive(), INVARG, "Invalid records query parameters");
+        request.keep_alive(), INVARG, "Invalid records query parameters");
     }
     if (!records_) { throw std::runtime_error("Records repository is not configured"); }
     json::array result;
     for (const auto& record : records_->Read(start, count)) {
       result.emplace_back(json::object{{"name", record.name}, {"score", record.score},
-          {"playTime", record.play_ms / 1000.0}});
+        {"playTime", record.play_ms / 1000.0}});
     }
     auto response = MakeJsonResponse(http::status::ok, request.version(), request.keep_alive(), std::move(result));
     if (request.method() == http::verb::head) { response.body().clear(); }
     return response;
   }
-
 } // namespace http_handler

@@ -1,11 +1,9 @@
 #pragma once
+//2026.10.30 12:52
 
+#include <list>
 #include <array>
 #include <cmath>
-#include <list>
-#include <iterator>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 #include <chrono>
 #include <limits>
 #include <random>
@@ -16,9 +14,12 @@
 #include <iomanip>
 #include <sstream>
 #include <utility>
+#include <iterator>
 #include <algorithm>
 #include <stdexcept>
 #include <unordered_map>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 #include "model.h"
 #include "tagged.h"
@@ -37,8 +38,8 @@ namespace model {
   } // namespace detail
 
   using DogId = util::Tagged<std::uint64_t, detail::DogTag>;
-  using PlayerId = util::Tagged<std::uint64_t, detail::PlayerTag>;
   using Token = util::Tagged<std::string, detail::TokenTag>;
+  using PlayerId = util::Tagged<std::uint64_t, detail::PlayerTag>;
 
   struct Position {
     double x = 0.0;
@@ -96,6 +97,7 @@ namespace model {
       idle_ms_ += consumed_idle;
       if (idle_ms_ >= limit_ms) { retired_ = true; Stop(); }
     }
+    
     DogId GetId() const noexcept {
       return id_;
     }
@@ -277,6 +279,7 @@ namespace model {
       collision_detector::Item GetItem(std::size_t index) const override {
         return items.at(index);
       }
+      
       std::size_t GatherersCount() const override { return gatherers.size(); }
       collision_detector::Gatherer GetGatherer(std::size_t index) const override {
         return gatherers.at(index);
@@ -297,7 +300,6 @@ namespace model {
           collected[event.item_id] = true;
         }
       }
-      // Preserve indices until every event has been processed.
       std::size_t write = 0;
       for (std::size_t read = 0; read < loot_count; ++read) {
         if (!collected[read]) {
@@ -309,16 +311,6 @@ namespace model {
       }
       lost_objects_.resize(write);
     }
-
-    const Map* map_;
-    bool randomize_spawn_points_ = false;
-    std::uint64_t next_dog_id_ = 0;
-    std::mt19937 random_generator_;
-    std::list<Dog> dogs_;
-    double retirement_ms_ = 60000.0;
-    loot_gen::LootGenerator loot_generator_;
-    std::uint64_t next_loot_id_ = 0;
-    std::vector<LostObject> lost_objects_;
 
     void GenerateLoot(std::chrono::milliseconds delta) {
       if (dogs_.size() > std::numeric_limits<unsigned>::max()
@@ -340,6 +332,16 @@ namespace model {
       }
     }
 
+    const Map* map_;
+    bool randomize_spawn_points_ = false;
+    std::uint64_t next_dog_id_ = 0;
+    std::mt19937 random_generator_;
+    std::list<Dog> dogs_;
+    double retirement_ms_ = 60000.0;
+    loot_gen::LootGenerator loot_generator_;
+    std::uint64_t next_loot_id_ = 0;
+    std::vector<LostObject> lost_objects_;
+
   public:
     GameSession(const Map* map, bool randomize_spawn_points,
                 LootGeneratorConfig config = {},
@@ -359,9 +361,11 @@ namespace model {
     }
 
     void SetRetirementTimeMs(double value) noexcept { retirement_ms_ = value; }
+    
     void RemoveDog(DogId id) noexcept {
       dogs_.remove_if([id](const Dog& dog) { return dog.GetId() == id; });
     }
+    
     const Map& GetMap() const noexcept {
       return *map_;
     }
@@ -370,9 +374,7 @@ namespace model {
       if (delta.count() < 0) {
         throw std::invalid_argument("Negative tick interval");
       }
-      if (delta.count() == 0) {
-        return;
-      }
+      if (delta.count() == 0) { return; }
       const double delta_seconds = std::chrono::duration<double>(delta).count();
       CollisionProvider provider;
       provider.items.reserve(lost_objects_.size() + map_->GetOffices().size());
@@ -398,7 +400,6 @@ namespace model {
       for (Dog& dog : dogs_) {
         dog.AdvanceTime(moving_times[timing_index++], static_cast<double>(delta.count()), retirement_ms_);
       }
-      // Newly generated objects participate starting with the next tick.
       GenerateLoot(delta);
     }
 
@@ -488,6 +489,7 @@ namespace model {
     }
 
     void Remove(PlayerId id) noexcept { players_.erase(id); }
+    
     auto begin() const noexcept {
       return players_.begin();
     }
@@ -517,6 +519,7 @@ namespace model {
     void RemovePlayer(const Player& player) noexcept {
       std::erase_if(token_to_player_, [&player](const auto& entry) { return entry.second == &player; });
     }
+    
     Token AddPlayer(Player& player) {
       Token token{std::string{}};
       do {

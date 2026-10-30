@@ -1,4 +1,5 @@
 #pragma once
+//2026.10.30 13:40
 
 #include <iostream>
 #include <string_view>
@@ -59,9 +60,8 @@ namespace logger {
   inline void LogError( const boost::system::error_code& ec, std::string_view where) {
   BOOST_LOG_TRIVIAL(error)
     << logging::add_value( additional_data
-         , json::object{ {COD, ec.value()}, {TXT, ec.message()}, {WHE, where},})
+       , json::object{ {COD, ec.value()}, {TXT, ec.message()}, {WHE, where},})
     << ERR;
   }
-
 }  // namespace logger
 

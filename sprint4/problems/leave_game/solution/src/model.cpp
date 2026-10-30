@@ -1,9 +1,12 @@
+//2026.10.30 13:42
+
 #include <stdexcept>
 
 #include "model.h"
 #include "literals.h"
 
 namespace model {
+  
   using namespace std::literals;
 
   void Map::AddOffice(Office office) {

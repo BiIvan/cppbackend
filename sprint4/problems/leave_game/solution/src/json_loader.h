@@ -1,4 +1,5 @@
 #pragma once
+//2026.10.30 13:23
 
 #include <filesystem>
 
@@ -7,6 +8,5 @@
 
 namespace json_loader {
 
-model::Game LoadGame(const std::filesystem::path& json_path, extra_data::ExtraData& extra);
-
+  model::Game LoadGame(const std::filesystem::path& json_path, extra_data::ExtraData& extra);
 }  // namespace json_loader

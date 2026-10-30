@@ -1,0 +1,37 @@
+#pragma once
+//2026.10.30 16:03
+
+#include <chrono>
+#include <utility>
+#include <functional>
+
+namespace serialization { class StateSerializer; }
+
+namespace loot_gen {
+
+  class LootGenerator {
+    friend class serialization::StateSerializer;
+      
+  public:
+
+    using RandomGenerator = std::function<double()>;
+    using TimeInterval = std::chrono::milliseconds;
+    
+    LootGenerator(TimeInterval base_interval, double probability,
+                RandomGenerator random_gen = DefaultGenerator)
+      : base_interval_{base_interval}
+      , probability_{probability}
+      , random_generator_{std::move(random_gen)} {
+    }
+
+    unsigned Generate(TimeInterval time_delta, unsigned loot_count, unsigned looter_count);
+  
+  private:
+    static double DefaultGenerator() noexcept { return 1.0; };
+    
+    TimeInterval base_interval_;
+    double probability_;
+    TimeInterval time_without_loot_{};
+    RandomGenerator random_generator_;
+  };
+}  // namespace loot_gen

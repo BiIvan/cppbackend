@@ -1,5 +1,5 @@
 #pragma once
-//2026.10.30 13:52
+//2026.10.30 14:52
 
 #include <cmath>
 #include <chrono>
@@ -23,7 +23,6 @@ namespace model {
 
   using Dimension = int;
   using Coord = Dimension;
-  using Id = util::Tagged<std::string, Office>;
 
   struct Point {
     Coord x, y;
@@ -100,11 +99,8 @@ namespace model {
   };
 
   class Office {
-    Id id_;
-    Point position_;
-    Offset offset_;
-    
   public:
+    using Id = util::Tagged<std::string, Office>;
 
     Office(Id id, Point position, Offset offset) noexcept
       : id_{std::move(id)}
@@ -123,6 +119,11 @@ namespace model {
     Offset GetOffset() const noexcept {
       return offset_;
     }
+    
+  private:  
+    Id id_;
+    Point position_;
+    Offset offset_;
   };
 
 
